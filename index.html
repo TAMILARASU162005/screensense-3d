@@ -2,1103 +2,638 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <title>ScreenSense 3D | Coimbatore Multiplex</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ScreenSense 3D | Coimbatore Multiplex Experience</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 
   <style>
-    :root {
-      --bg-midnight: #040509;
-      --card-onyx: rgba(9, 11, 18, 0.88);
-      --gold-primary: #d4af37;
-      --gold-bright: #f3e5ab;
-      --gold-glow: rgba(212, 175, 55, 0.35);
-      --crimson-accent: #e50914;
-      --emerald-prime: #00f59b;
-      --amber-mid: #ffb800;
-      --rose-discount: #ff3366;
-    }
-
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
     body {
+      background-color: #06080E;
+      color: #E2E8F0;
       font-family: 'Plus Jakarta Sans', sans-serif;
-      background: radial-gradient(ellipse at 50% -10%, #17111a 0%, #08090f 50%, #030407 100%);
-      color: #f8fafc;
-      min-height: 100vh;
       overflow-x: hidden;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
 
-    .font-brand-cinematic {
+    header {
+      background: rgba(10, 14, 24, 0.95);
+      border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .brand-title {
       font-family: 'Cinzel', serif;
-      letter-spacing: 0.12em;
+      font-size: 20px;
+      color: #F5D77F;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      letter-spacing: 1px;
+    }
+    .theatre-ribbon {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+    .theatre-pill {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #94A3B8;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+    .theatre-pill.active {
+      background: rgba(212, 175, 55, 0.15);
+      border-color: #D4AF37;
+      color: #F5D77F;
+      box-shadow: 0 0 12px rgba(212, 175, 55, 0.25);
     }
 
-    .font-mono-tech {
-      font-family: 'Space Grotesk', monospace;
+    .viewport-grid {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      flex: 1;
+      height: calc(100vh - 65px);
+      min-height: 620px;
     }
 
-    /* Luxury Metallic Gold Gradient & Shimmer */
-    .gold-gradient-text {
-      background: linear-gradient(135deg, #fff2cc 0%, #d4af37 45%, #aa771c 85%, #f9e29c 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+    .canvas-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background: #030407;
+    }
+    #cinemaCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
     }
 
-    .gold-border-glow {
-      border: 1px solid rgba(212, 175, 55, 0.38);
-      box-shadow: 0 0 20px rgba(212, 175, 55, 0.16), inset 0 0 12px rgba(212, 175, 55, 0.04);
+    .camera-bar {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 8px;
+      background: rgba(10, 14, 24, 0.85);
+      backdrop-filter: blur(8px);
+      padding: 6px 10px;
+      border-radius: 30px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      z-index: 10;
+    }
+    .cam-btn {
+      background: transparent;
+      border: none;
+      color: #94A3B8;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .cam-btn.active, .cam-btn:hover {
+      background: #D4AF37;
+      color: #06080E;
     }
 
-    .gold-pill-active {
-      background: linear-gradient(135deg, rgba(212, 175, 55, 0.22) 0%, rgba(26, 20, 10, 0.9) 100%);
-      border: 1px solid rgba(243, 229, 171, 0.65);
-      box-shadow: 0 0 22px rgba(212, 175, 55, 0.32), inset 0 0 10px rgba(212, 175, 55, 0.15);
+    .control-hub {
+      background: rgba(10, 14, 24, 0.98);
+      border-left: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      overflow-y: auto;
+    }
+    .hub-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 10px;
+      padding: 12px;
+    }
+    .hub-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: #94A3B8;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 10px;
+    }
+    .chips-group {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .chip {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #CBD5E1;
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+    .chip.active {
+      background: rgba(212, 175, 55, 0.2);
+      border-color: #D4AF37;
+      color: #F5D77F;
     }
 
-    /* Glassmorphism */
-    .glass-onyx {
-      background: var(--card-onyx);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
-      border: 1px solid rgba(255, 255, 255, 0.07);
+    .cart-item {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      margin-bottom: 6px;
+      color: #E2E8F0;
+    }
+    .cart-total-box {
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding-top: 10px;
+      margin-top: 10px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 16px;
+      font-weight: 700;
+      color: #F5D77F;
     }
 
-    .glass-onyx-active {
-      background: rgba(14, 17, 26, 0.94);
-      backdrop-filter: blur(24px);
-      border: 1px solid rgba(212, 175, 55, 0.35);
-      box-shadow: 0 0 25px rgba(212, 175, 55, 0.15);
+    .btn-checkout {
+      width: 100%;
+      background: linear-gradient(135deg, #D4AF37 0%, #B8860B 100%);
+      color: #06080E;
+      border: none;
+      border-radius: 8px;
+      padding: 14px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: all 0.2s;
+      box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+      position: relative;
+      z-index: 20;
+    }
+    .btn-checkout:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(212, 175, 55, 0.5);
+    }
+    .btn-checkout:active {
+      transform: translateY(1px);
     }
 
-    .pulse-glow {
-      animation: pulseGold 2.8s infinite ease-in-out;
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(10px);
+      z-index: 9999;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
     }
-
-    @keyframes pulseGold {
-      0%, 100% { opacity: 0.85; transform: scale(1); }
-      50% { opacity: 1; transform: scale(1.015); box-shadow: 0 0 28px rgba(212, 175, 55, 0.45); }
+    .modal-overlay.show {
+      display: flex;
     }
-
-    /* Scrollbars */
-    ::-webkit-scrollbar {
-      width: 4px;
-      height: 4px;
+    .pass-card {
+      background: #0E1322;
+      border: 1px solid #D4AF37;
+      border-radius: 16px;
+      padding: 24px;
+      max-width: 440px;
+      width: 100%;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+      position: relative;
     }
-    ::-webkit-scrollbar-track {
-      background: #05060b;
+    .pass-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
     }
-    ::-webkit-scrollbar-thumb {
-      background: #232029;
-      border-radius: 9999px;
+    .btn-close {
+      background: transparent;
+      border: none;
+      color: #94A3B8;
+      font-size: 20px;
+      cursor: pointer;
     }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #d4af37;
+    .qr-container {
+      background: #FFFFFF;
+      padding: 12px;
+      border-radius: 10px;
+      width: 164px;
+      height: 164px;
+      margin: 16px auto;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .btn-download-pass {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #FFF;
+      padding: 10px;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 10px;
     }
   </style>
 </head>
-<body class="flex flex-col select-none antialiased">
+<body>
 
-  <!-- TOP LUXURY HEADER & REDESIGNED THEATER ARBITRATION RIBBON -->
-  <header class="sticky top-0 z-50 glass-onyx border-b border-amber-500/20 px-4 lg:px-8 py-3.5">
-    <div class="flex flex-col xl:flex-row items-center justify-between gap-4 max-w-[1850px] mx-auto">
-      
-      <!-- Brand & Coimbatore Regional Hub Cluster -->
-      <div class="flex items-center justify-between w-full xl:w-auto gap-4">
-        <div class="flex items-center gap-3.5">
-          <!-- Cine Lens Emblem -->
-          <div class="relative w-11 h-11 rounded-2xl bg-gradient-to-tr from-[#997327] via-[#d4af37] to-[#fff4d1] p-[1.5px] shadow-lg shadow-amber-900/40">
-            <div class="w-full h-full bg-[#090b12] rounded-2xl flex items-center justify-center">
-              <svg class="w-5 h-5 text-amber-300 drop-shadow-[0_0_8px_rgba(212,175,55,0.7)]" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/>
-              </svg>
-            </div>
-          </div>
-
-          <!-- Sleek Cinematic Typography -->
-          <div>
-            <div class="flex items-center gap-2.5">
-              <span class="font-brand-cinematic text-lg lg:text-xl font-bold tracking-wider gold-gradient-text">
-                ScreenSense
-              </span>
-              <span class="font-mono-tech text-xs font-bold text-amber-400 bg-amber-950/80 px-2 py-0.5 rounded-md border border-amber-500/40 tracking-widest shadow-sm">
-                3D
-              </span>
-            </div>
-            
-            <div class="flex items-center gap-2 mt-0.5 text-[11px] text-slate-400">
-              <span class="inline-flex items-center gap-1.5 font-medium">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
-                <span class="text-slate-300 font-semibold tracking-wide">Coimbatore Central Hub</span>
-              </span>
-              <span class="text-slate-600">•</span>
-              <span class="hidden sm:inline text-amber-200/60 font-mono-tech text-[10px]">SMPTE / THX Certified</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Mobile Active Multiplex Flag -->
-        <span id="active-theatre-mobile-badge" class="xl:hidden text-[11px] font-semibold text-amber-300 px-3 py-1 rounded-xl bg-amber-950/50 border border-amber-500/40">
-          Broadway EPIQ
-        </span>
-      </div>
-
-      <!-- Segmented Multiplex Carousel with Distance Micro-Chips -->
-      <nav aria-label="Multiplex Selection" class="w-full xl:w-auto overflow-x-auto scrollbar-none py-0.5">
-        <div class="flex items-center gap-2 min-w-max p-1 rounded-2xl bg-black/50 border border-amber-500/15" id="theatre-pills-container">
-          <!-- Injected dynamically via script -->
-        </div>
-      </nav>
-
-      <!-- Quick Action / Direct Navigation Link -->
-      <div class="hidden 2xl:flex items-center gap-3">
-        <a id="gmaps-direct-btn" href="#" target="_blank" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-950/70 to-black hover:from-amber-900/60 text-amber-200 border border-amber-500/40 text-xs font-semibold flex items-center gap-2 transition shadow-lg shadow-amber-950/30">
-          <svg class="w-3.5 h-3.5 text-amber-400" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-          </svg>
-          <span id="theatre-nav-text">Turnstile Navigation</span>
-        </a>
-      </div>
-
+  <header>
+    <div class="brand-title">🎬 SCREENSENSE 3D <span>• COIMBATORE</span></div>
+    <div class="theatre-ribbon">
+      <div class="theatre-pill active" onclick="setTheatre('Broadway Cinemas - EPIQ (Avinashi Rd)')">Broadway Cinemas (EPIQ)</div>
+      <div class="theatre-pill" onclick="setTheatre('KG Cinemas (Race Course)')">KG Cinemas</div>
+      <div class="theatre-pill" onclick="setTheatre('INOX - Brookefields Mall')">INOX Brookefields</div>
+      <div class="theatre-pill" onclick="setTheatre('PVR INOX - Prozone Mall')">PVR Prozone</div>
+      <div class="theatre-pill" onclick="setTheatre('Ganga Yamuna Complex')">Ganga Yamuna</div>
     </div>
   </header>
 
-  <!-- MAIN APP WORKSPACE (SPLIT 3D ARENA & CONTROL PANEL) -->
-  <main class="flex-1 flex flex-col lg:flex-row relative overflow-hidden">
-
-    <!-- LEFT / HERO: 3D WEBGL CINEMA AUDITORIUM CANVAS -->
-    <section class="flex-1 relative flex flex-col min-h-[52vh] lg:min-h-[calc(100vh-70px)] bg-[#03060d]">
-      
-      <!-- Top HUD: Camera Presets & Mode Selector -->
-      <div class="absolute top-4 inset-x-4 z-20 flex flex-wrap items-center justify-between gap-2 pointer-events-none">
-        
-        <!-- Camera Preset Pills (Director, Top-Down, Sweet Spot, Front POV) -->
-        <div class="pointer-events-auto flex items-center gap-1.5 p-1 rounded-2xl glass-onyx border border-white/10 shadow-2xl">
-          <button id="cam-director" class="cam-preset-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 shadow-sm transition">
-            🎬 3D Director View
-          </button>
-          <button id="cam-topdown" class="cam-preset-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white transition">
-            📐 Top Plan (2D)
-          </button>
-          <button id="cam-sweetspot" class="cam-preset-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white transition">
-            ⭐ Row F POV
-          </button>
-          <button id="cam-front" class="cam-preset-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white transition">
-            ⚠️ Row A Tilt POV
-          </button>
-        </div>
-
-        <!-- Mode Toggle (Booking vs Ergonomics Telemetry) -->
-        <div class="pointer-events-auto flex items-center p-1 rounded-2xl glass-onyx border border-white/10">
-          <button id="mode-booking-btn" class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-cyan-300 bg-cyan-950/80 border border-cyan-500/40 transition">
-            🎟️ Booking
-          </button>
-          <button id="mode-telemetry-btn" class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition">
-            🌡️ Heatmap
-          </button>
-        </div>
-
-      </div>
-
-      <!-- Real-time HUD: Hovered Seat Ergonomic Diagnostic Card -->
-      <div id="hover-hud" class="absolute top-20 left-4 z-20 pointer-events-none transition-all duration-300">
-        <div class="glass-onyx-active p-3.5 rounded-2xl w-64 space-y-2.5 shadow-2xl">
-          <div class="flex items-center justify-between border-b border-slate-700/60 pb-2">
-            <span class="text-[10px] uppercase font-bold tracking-wider text-slate-400">Ergonomic Telemetry</span>
-            <span id="hud-seat-id" class="px-2 py-0.5 rounded-md font-mono-tech text-xs font-extrabold bg-cyan-950 text-cyan-300 border border-cyan-500/50">F7</span>
-          </div>
-
-          <div class="grid grid-cols-2 gap-2 text-[11px]">
-            <div class="p-2 rounded-xl bg-black/50 border border-slate-800">
-              <span class="text-slate-400 block text-[10px]">Comfort (VCI)</span>
-              <span id="hud-vci" class="font-bold text-emerald-400 text-sm">94 / 100</span>
-            </div>
-            <div class="p-2 rounded-xl bg-black/50 border border-slate-800">
-              <span class="text-slate-400 block text-[10px]">Dynamic Fare</span>
-              <span id="hud-price" class="font-bold text-cyan-300 text-sm font-mono-tech">₹230</span>
-            </div>
-          </div>
-
-          <div class="space-y-1 text-[10px]">
-            <div class="flex justify-between text-slate-400">
-              <span>Neck Tilt Angle:</span>
-              <span id="hud-tilt" class="font-bold text-slate-200">12.5° (Ideal &lt; 20°)</span>
-            </div>
-            <div class="flex justify-between text-slate-400">
-              <span>THX Field of View:</span>
-              <span id="hud-fov" class="font-bold text-slate-200">38.2° (Target 36°–40°)</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Ambient IMAX Screen Curve Glow Projection at Top -->
-      <div class="absolute top-0 inset-x-0 h-28 bg-gradient-to-b from-cyan-500/20 via-cyan-500/5 to-transparent pointer-events-none z-10"></div>
-
-      <!-- 3D Canvas Mount Point -->
-      <div id="three-canvas-container" class="w-full flex-1 h-full cursor-grab active:cursor-grabbing"></div>
-
-      <!-- Bottom Canvas Footer Overlay: Screen Banner & Quick Help -->
-      <div class="absolute bottom-4 inset-x-4 z-20 flex items-center justify-between pointer-events-none">
-        <div class="pointer-events-auto px-4 py-2 rounded-2xl glass-onyx border border-cyan-500/30 flex items-center gap-2 shadow-xl">
-          <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse"></span>
-          <span id="screen-label" class="text-xs font-mono-tech font-bold tracking-wider text-cyan-200 uppercase">
-            Curved IMAX 4K Laser Screen
-          </span>
-        </div>
-
-        <div class="hidden sm:flex items-center gap-2 text-[11px] text-slate-400 glass-onyx px-3 py-1.5 rounded-xl border border-white/5 font-mono-tech">
-          <span>Click: Select Seat</span>
-          <span>•</span>
-          <span>Drag: Orbit 3D</span>
-          <span>•</span>
-          <span>Scroll: Zoom</span>
-        </div>
-      </div>
-
-    </section>
-
-    <!-- RIGHT: ULTRA-ORGANIZED LUXURY BOOKING & CHECKOUT CONTROL PANEL -->
-    <aside class="w-full lg:w-[420px] xl:w-[460px] glass-onyx border-t lg:border-t-0 lg:border-l border-slate-800 p-5 xl:p-6 flex flex-col gap-5 overflow-y-auto z-30 max-h-[50vh] lg:max-h-[calc(100vh-70px)]">
-      
-      <!-- Current Theatre & Show Details Summary -->
-      <div class="p-4 rounded-2xl bg-gradient-to-br from-slate-900/90 to-cyan-950/30 border border-cyan-500/30 space-y-2">
-        <div class="flex items-center justify-between">
-          <span class="text-[10px] font-bold uppercase tracking-wider text-cyan-400">Selected Multiplex</span>
-          <span id="theatre-pill-distance" class="text-[10px] font-mono-tech px-2 py-0.5 rounded bg-black/60 text-slate-300 border border-slate-700"></span>
-        </div>
-        <h2 id="theatre-display-name" class="text-base font-extrabold text-white tracking-tight"></h2>
-        <p id="theatre-display-address" class="text-xs text-slate-300 font-light leading-relaxed"></p>
-        <div class="pt-1.5 flex items-center justify-between border-t border-slate-800 text-xs">
-          <span id="theatre-display-screen" class="font-semibold text-cyan-300 text-[11px]"></span>
-          <a id="theatre-maps-link" href="#" target="_blank" class="text-[11px] font-bold text-sky-400 hover:text-sky-300 flex items-center gap-1">
-            Google Maps Direction ↗
-          </a>
-        </div>
-      </div>
-
-      <!-- Showtime, Genre & Surcharge Chips (Clean Grid Layout) -->
-      <div class="space-y-3">
-        <div class="flex items-center justify-between">
-          <label class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Showtime & Cinematic Pacing</label>
-          <span class="text-[10px] font-mono-tech text-cyan-400">Dynamic Multiplier</span>
-        </div>
-
-        <!-- Genre chips -->
-        <div class="grid grid-cols-4 gap-1.5" id="genre-chips-container">
-          <button data-genre="Action" class="genre-chip px-2 py-1.5 rounded-xl text-xs font-semibold bg-cyan-950 text-cyan-300 border border-cyan-500/50 shadow-sm transition">Action</button>
-          <button data-genre="Sci-Fi" class="genre-chip px-2 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 text-slate-400 border border-slate-800 hover:text-white transition">Sci-Fi</button>
-          <button data-genre="Drama" class="genre-chip px-2 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 text-slate-400 border border-slate-800 hover:text-white transition">Drama</button>
-          <button data-genre="Horror" class="genre-chip px-2 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 text-slate-400 border border-slate-800 hover:text-white transition">Horror</button>
-        </div>
-
-        <!-- Timing chips -->
-        <div class="grid grid-cols-3 gap-1.5" id="slot-chips-container">
-          <button data-slot="Matinee" class="slot-chip px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 text-slate-400 border border-slate-800 hover:text-white transition">02:00 PM</button>
-          <button data-slot="Evening" class="slot-chip px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-cyan-950 text-cyan-300 border border-cyan-500/50 shadow-sm transition">06:30 PM</button>
-          <button data-slot="Night" class="slot-chip px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 text-slate-400 border border-slate-800 hover:text-white transition">10:00 PM</button>
-        </div>
-      </div>
-
-      <!-- Ergonomic Tier Color Legend -->
-      <div class="p-3.5 rounded-2xl bg-black/40 border border-slate-800 space-y-2 text-xs">
-        <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Color Ergonomic Tier Legend</div>
-        
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <span class="w-3 h-3 rounded-md bg-[#00f59b] neon-glow-emerald"></span>
-            <span class="text-slate-200 font-medium">Sweet Spot (Rows E–G)</span>
-          </div>
-          <span class="font-mono-tech text-emerald-300 font-bold">₹210–250</span>
-        </div>
-
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <span class="w-3 h-3 rounded-md bg-[#ffb800]"></span>
-            <span class="text-slate-200 font-medium">Standard Viewing (Rows C, D, H, J)</span>
-          </div>
-          <span class="font-mono-tech text-amber-300 font-bold">₹160–190</span>
-        </div>
-
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <span class="w-3 h-3 rounded-md bg-[#ff3366] neon-glow-ruby"></span>
-            <span class="text-slate-200 font-medium">Front Discount (Rows A–B)</span>
-          </div>
-          <span class="font-mono-tech text-rose-300 font-bold">₹95–115</span>
-        </div>
-      </div>
-
-      <!-- Cart Itemized Breakdown -->
-      <div class="flex-1 space-y-2.5">
-        <div class="flex items-center justify-between">
-          <span class="text-xs font-bold uppercase tracking-wider text-slate-300">Selected Seats (<span id="cart-count">0</span>)</span>
-          <button id="clear-cart-btn" class="text-[10px] text-slate-400 hover:text-rose-400 transition">Clear All</button>
-        </div>
-
-        <div id="cart-items-list" class="space-y-2 max-h-36 overflow-y-auto pr-1">
-          <!-- Dynamic seat cards injected here -->
-          <div class="p-4 rounded-xl bg-slate-900/40 border border-dashed border-slate-800 text-center text-xs text-slate-500">
-            Click seats in the 3D amphitheater to select
-          </div>
-        </div>
-      </div>
-
-      <!-- Financial Calculation Strip -->
-      <div class="p-3.5 rounded-2xl bg-black/60 border border-slate-800/80 space-y-2 text-xs">
-        <div class="flex justify-between text-slate-400">
-          <span>Tickets Base Total:</span>
-          <span id="bill-base-fare" class="font-mono-tech text-slate-200">₹0</span>
-        </div>
-        <div class="flex justify-between text-slate-400">
-          <span>Front Row Ergonomic Relief:</span>
-          <span id="bill-discount" class="font-mono-tech text-emerald-400">-₹0</span>
-        </div>
-        <div class="flex justify-between text-slate-400">
-          <span>Convenience Fee & GST:</span>
-          <span id="bill-fees" class="font-mono-tech text-slate-200">₹0</span>
-        </div>
-        <div class="border-t border-slate-800 pt-2 flex justify-between items-center text-sm">
-          <span class="font-bold text-white">Grand Total Payable:</span>
-          <span id="bill-grand-total" class="font-mono-tech text-xl font-extrabold text-cyan-300">₹0</span>
-        </div>
-      </div>
-
-      <!-- Main Action: Confirm Booking & Generate Boarding Pass -->
-      <button id="book-pass-btn" disabled class="w-full py-4 rounded-2xl font-extrabold text-xs tracking-wider uppercase bg-slate-800 text-slate-500 cursor-not-allowed transition flex items-center justify-center gap-2 shadow-xl">
-        <span>Confirm Booking & Generate Pass</span>
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-      </button>
-
-    </aside>
-
-    <!-- HOLOGRAPHIC TURNSTILE DIGITAL BOARDING PASS MODAL -->
-    <div id="ticket-modal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4">
-      <div class="glass-onyx-active max-w-lg w-full rounded-3xl p-6 lg:p-7 border border-cyan-500/50 shadow-2xl neon-glow-cyan flex flex-col gap-4 max-h-[92vh] overflow-y-auto">
-        
-        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-          <div class="flex items-center gap-2">
-            <span class="w-3 h-3 rounded-full bg-emerald-400 animate-ping"></span>
-            <h3 class="text-base font-extrabold text-white uppercase tracking-tight">Turnstile Boarding Pass</h3>
-          </div>
-          <button id="close-modal-btn" class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition">✕</button>
-        </div>
-
-        <!-- Ticket Card Frame -->
-        <div class="p-5 rounded-2xl bg-gradient-to-b from-[#0a1024] to-[#04060d] border border-cyan-500/40 relative overflow-hidden space-y-4">
-          <!-- Background Watermark -->
-          <div class="absolute -right-8 -bottom-8 text-7xl font-mono-tech font-extrabold text-white/[0.03] select-none pointer-events-none">
-            3D IMAX
-          </div>
-
-          <div class="flex items-start justify-between">
-            <div>
-              <span class="text-[10px] font-bold uppercase tracking-wider text-cyan-400">Multiplex</span>
-              <h4 id="pass-theatre-title" class="text-base font-extrabold text-white"></h4>
-              <p id="pass-theatre-screen" class="text-xs text-slate-300 font-medium"></p>
-            </div>
-            <div class="px-2.5 py-1 rounded-lg bg-emerald-950/80 border border-emerald-500/40 text-[10px] font-bold text-emerald-300">
-              SMPTE VERIFIED
-            </div>
-          </div>
-
-          <div class="grid grid-cols-2 gap-3 text-xs border-y border-slate-800/80 py-3">
-            <div>
-              <span class="text-slate-400 block text-[10px]">Movie Genre</span>
-              <span id="pass-genre" class="font-bold text-white">Action (High Pacing)</span>
-            </div>
-            <div>
-              <span class="text-slate-400 block text-[10px]">Show Slot</span>
-              <span id="pass-slot" class="font-bold text-white">06:30 PM</span>
-            </div>
-            <div>
-              <span class="text-slate-400 block text-[10px]">Reserved Seats</span>
-              <span id="pass-seats" class="font-bold font-mono-tech text-cyan-300 text-sm"></span>
-            </div>
-            <div>
-              <span class="text-slate-400 block text-[10px]">Total Paid</span>
-              <span id="pass-paid" class="font-bold font-mono-tech text-emerald-400 text-sm"></span>
-            </div>
-          </div>
-
-          <!-- Turnstile QR Container -->
-          <div class="flex flex-col items-center justify-center pt-2 gap-3">
-            <div id="qrcode-box" class="p-3 bg-white rounded-2xl shadow-xl"></div>
-            <span class="text-[10px] text-slate-400 font-mono-tech tracking-wider uppercase">Scan this QR at Turnstile Gate 02</span>
-          </div>
-        </div>
-
-        <div class="flex gap-2">
-          <button id="download-pass-png-btn" class="flex-1 py-3.5 rounded-2xl bg-gradient-to-r from-cyan-400 via-sky-500 to-indigo-600 text-black font-extrabold text-xs uppercase tracking-wider hover:brightness-110 shadow-lg shadow-cyan-500/30 transition flex items-center justify-center gap-2">
-            <span>📥 Save Pass to Device</span>
-          </button>
-        </div>
-
+  <div class="viewport-grid">
+    <div class="canvas-container">
+      <canvas id="cinemaCanvas"></canvas>
+      <div class="camera-bar">
+        <button class="cam-btn active" onclick="setCamera('director')">Director 3D</button>
+        <button class="cam-btn" onclick="setCamera('top')">Top-Down 2D</button>
+        <button class="cam-btn" onclick="setCamera('pov')">Row F POV</button>
+        <button class="cam-btn" onclick="setCamera('front')">Row A POV</button>
       </div>
     </div>
 
-  </main>
+    <div class="control-hub">
+      <div class="hub-card">
+        <div class="hub-title">Selected Multiplex</div>
+        <div id="dispTheatre" style="font-size:14px; font-weight:700; color:#F5D77F;">Broadway Cinemas - EPIQ</div>
+        <div style="font-size:11px; color:#94A3B8; margin-top:4px;">Audi 1 • 4K Laser Dolby Atmos</div>
+      </div>
+
+      <div class="hub-card">
+        <div class="hub-title">Movie & Showtime</div>
+        <div class="chips-group" style="margin-bottom:8px;">
+          <div class="chip active">Action</div>
+          <div class="chip">Sci-Fi</div>
+          <div class="chip">Drama</div>
+        </div>
+        <div class="chips-group">
+          <div class="chip active">02:00 PM</div>
+          <div class="chip">06:30 PM</div>
+          <div class="chip">10:00 PM</div>
+        </div>
+      </div>
+
+      <div class="hub-card">
+        <div class="hub-title">Comfort Legend</div>
+        <div style="display:flex; flex-direction:column; gap:6px; font-size:12px;">
+          <div style="color:#00f59b;">🟢 Sweet Spot (Row E-G) • ₹240</div>
+          <div style="color:#ffb800;">🟡 Standard Comfort (Row C-D) • ₹180</div>
+          <div style="color:#ff3366;">🔴 Ergonomic Discount (Row A-B) • ₹110</div>
+        </div>
+      </div>
+
+      <div class="hub-card" style="flex:1;">
+        <div class="hub-title">Selected Seats</div>
+        <div id="cartItems"></div>
+        <div class="cart-total-box">
+          <span>Total Fare</span>
+          <span id="dispTotal">₹0</span>
+        </div>
+      </div>
+
+      <button class="btn-checkout" id="btnConfirmPay" onclick="openBookingPass()">
+        💳 Confirm Booking & Generate Pass
+      </button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="passModal">
+    <div class="pass-card">
+      <div class="pass-header">
+        <div style="font-family:'Cinzel', serif; color:#F5D77F; font-size:16px;">DIGITAL BOARDING PASS</div>
+        <button class="btn-close" onclick="closeBookingPass()">✕</button>
+      </div>
+
+      <div style="border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 10px;">
+        <div id="passTheatre" style="font-size:15px; font-weight:700; color:#FFF;">Broadway Cinemas - EPIQ</div>
+        <div style="font-size:12px; color:#94A3B8;">4K Laser Screen • Verified Turnstile Entry</div>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:8px;">
+        <span style="color:#94A3B8;">Confirmed Seats:</span>
+        <strong id="passSeats" style="color:#D4AF37;">-</strong>
+      </div>
+      <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:12px;">
+        <span style="color:#94A3B8;">Amount Paid:</span>
+        <strong id="passTotal" style="color:#00f59b;">-</strong>
+      </div>
+
+      <div class="qr-container" id="qrTarget"></div>
+
+      <div style="font-size:11px; color:#64748B; text-align:center; margin-top:6px;">
+        Scan this dynamic QR code at the cinema turnstile barrier.
+      </div>
+
+      <button class="btn-download-pass" onclick="alert('Ticket downloaded successfully!')">
+        📥 Save Pass Image
+      </button>
+    </div>
+  </div>
 
   <script>
-    // Coimbatore Multiplex Database
-    const COIMBATORE_THEATRES = {
-      broadway: {
-        id: "broadway",
-        name: "Broadway Cinemas - EPIQ",
-        shortName: "Broadway EPIQ",
-        address: "96, Broadway Square, Avinashi Rd, Civil Aerodrome, Coimbatore",
-        screen: "EPIQ Giant Laser Screen (64ft 4K Atmos)",
-        lat: 11.0366,
-        lon: 77.0378,
-        distance: "450m nearby",
-        screenMult: 1.35
-      },
-      kg: {
-        id: "kg",
-        name: "KG Cinemas (Race Course)",
-        shortName: "KG Cinemas",
-        address: "3, Race Course Rd, Gopalapuram, Coimbatore",
-        screen: "Screen 1 - 4K Laser Christie Dual",
-        lat: 11.0028,
-        lon: 76.9740,
-        distance: "9.2 km",
-        screenMult: 1.15
-      },
-      brookefields: {
-        id: "brookefields",
-        name: "INOX Cinemas - Brookefields",
-        shortName: "Brookefields INOX",
-        address: "4th Floor, Brookefields Mall, Krishnaswamy Rd, Coimbatore",
-        screen: "Audi 1 - INSIGNIA VIP Dolby 7.1",
-        lat: 11.0116,
-        lon: 76.9572,
-        distance: "9.9 km",
-        screenMult: 1.25
-      },
-      prozone: {
-        id: "prozone",
-        name: "PVR INOX - Prozone Mall",
-        shortName: "Prozone PVR",
-        address: "S.F. 201, Sathy Rd, Saravanampatti, Coimbatore",
-        screen: "Audi 2 - 4K Dolby Atmos Laser",
-        lat: 11.0558,
-        lon: 76.9942,
-        distance: "5.1 km",
-        screenMult: 1.20
-      },
-      ganga: {
-        id: "ganga",
-        name: "Ganga Yamuna Complex",
-        shortName: "Ganga Yamuna",
-        address: "Cross Cut Road, Gandhipuram, Coimbatore",
-        screen: "Ganga Screen - RGB 4K Laser",
-        lat: 11.0185,
-        lon: 76.9665,
-        distance: "8.4 km",
-        screenMult: 1.05
-      }
-    };
+    let currentTheatre = "Broadway Cinemas - EPIQ (Avinashi Rd)";
+    let selectedSeats = new Map();
+    const defaultSeats = [ { id: "E5", price: 240 }, { id: "E6", price: 240 } ];
+    defaultSeats.forEach(s => selectedSeats.set(s.id, s.price));
 
-    let currentTheatre = COIMBATORE_THEATRES.broadway;
-    let selectedGenre = "Action";
-    let selectedSlot = "Evening";
-    let selectedSeats = new Set();
-    let currentMode = "booking"; // "booking" | "telemetry"
-
-    const ROWS = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"];
-    const SEATS_PER_ROW = 14;
-
-    const seatDataMap = new Map();
-    let seatInteractiveMeshes = [];
-    let hoveredSeatId = "F7";
-
-    // Mathematical Ergonomics & Dynamic Pricing Engine
-    function calculateErgonomics(rowIdx, colIdx) {
-      const distFromScreenY = 3.6 + rowIdx * 1.38; // Distance in meters
-      const horizontalOffset = (colIdx - 7.5) * 0.96; // Lateral center offset
-      const elevationZ = 0.45 + rowIdx * 0.38; // Stadium riser incline
-
-      const screenCenterHeight = 4.8;
-      const verticalElevationDelta = screenCenterHeight - elevationZ;
-      const verticalTiltDeg = Math.max(0, Math.atan2(verticalElevationDelta, distFromScreenY) * (180 / Math.PI));
-
-      const screenHalfWidth = 10.5;
-      const fovRad = Math.atan2(screenHalfWidth - horizontalOffset, distFromScreenY) +
-                     Math.atan2(screenHalfWidth + horizontalOffset, distFromScreenY);
-      const fovHorizontalDeg = fovRad * (180 / Math.PI);
-
-      const yawDeg = Math.abs(Math.atan2(horizontalOffset, distFromScreenY) * (180 / Math.PI));
-
-      // Visual Comfort Index (VCI) 0 to 100
-      let vci = 100.0;
-      if (verticalTiltDeg > 35) {
-        vci -= Math.min(65, (verticalTiltDeg - 35) * 3.4);
-      } else if (verticalTiltDeg > 20) {
-        vci -= (verticalTiltDeg - 20) * 1.15;
-      }
-      vci -= yawDeg * 0.65;
-      vci = Math.max(15, Math.min(99, Math.round(vci)));
-
-      // Dynamic Pricing
-      let baseTierPrice = 175;
-      if (rowIdx < 2) {
-        baseTierPrice = 110; // Front discount
-      } else if (rowIdx >= 4 && rowIdx <= 6) {
-        baseTierPrice = 225; // Sweet spot
-      } else if (rowIdx >= 7) {
-        baseTierPrice = 185;
-      }
-
-      // Comfort elasticity multiplier
-      const comfortMultiplier = (vci / 100) * 0.35 + 0.65;
-      const finalPrice = Math.round(baseTierPrice * comfortMultiplier * currentTheatre.screenMult);
-
-      return {
-        rowLetter: ROWS[rowIdx],
-        seatNum: colIdx,
-        seatId: `${ROWS[rowIdx]}${colIdx}`,
-        pos: { x: horizontalOffset, y: elevationZ, z: distFromScreenY },
-        verticalTiltDeg: parseFloat(verticalTiltDeg.toFixed(1)),
-        fovHorizontalDeg: parseFloat(fovHorizontalDeg.toFixed(1)),
-        yawDeg: parseFloat(yawDeg.toFixed(1)),
-        vci: vci,
-        price: finalPrice
-      };
-    }
-
-    const container = document.getElementById("three-canvas-container");
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x04060d);
-    scene.fog = new THREE.FogExp2(0x04060d, 0.022);
-
-    const camera = new THREE.PerspectiveCamera(48, container.clientWidth / container.clientHeight, 0.1, 100);
-    camera.position.set(-9, 11, 23);
-
-    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
-    renderer.setSize(container.clientWidth, container.clientHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.shadowMap.enabled = true;
-    container.appendChild(renderer.domElement);
-
-    const controls = new THREE.OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.06;
-    controls.maxPolarAngle = Math.PI / 2.06;
-    controls.minDistance = 2.5;
-    controls.maxDistance = 42;
-    controls.target.set(0, 3.2, 8.5);
-
-    // Curved IMAX Screen Geometry & Material
-    const screenRadius = 24;
-    const screenArc = Math.PI * 0.44;
-    const screenGeo = new THREE.CylinderGeometry(screenRadius, screenRadius, 9, 48, 1, true, -screenArc / 2, screenArc);
-    const screenMat = new THREE.MeshPhysicalMaterial({
-      color: 0x090f24,
-      emissive: 0x00e5ff,
-      emissiveIntensity: 0.32,
-      roughness: 0.15,
-      metalness: 0.2,
-      side: THREE.DoubleSide
-    });
-    const screenMesh = new THREE.Mesh(screenGeo, screenMat);
-    screenMesh.position.set(0, 4.8, -screenRadius + 1.8);
-    screenMesh.rotation.y = Math.PI;
-    scene.add(screenMesh);
-
-    // Glowing Laser Lights on Top of Screen
-    const screenTopLight = new THREE.PointLight(0x00e5ff, 2.8, 22);
-    screenTopLight.position.set(0, 9.2, 2);
-    scene.add(screenTopLight);
-
-    const ambientLight = new THREE.AmbientLight(0x0c1328, 1.8);
-    scene.add(ambientLight);
-
-    const keyFillLight = new THREE.DirectionalLight(0x5064a8, 0.9);
-    keyFillLight.position.set(12, 18, 14);
-    scene.add(keyFillLight);
-
-    // Theater Floor Mesh
-    const floorGeo = new THREE.PlaneGeometry(36, 32);
-    const floorMat = new THREE.MeshStandardMaterial({ color: 0x050711, roughness: 0.95 });
-    const floor = new THREE.Mesh(floorGeo, floorMat);
-    floor.rotation.x = -Math.PI / 2;
-    floor.position.set(0, 0, 10.5);
-    scene.add(floor);
-
-    // Stadium Risers with Neon Floor Strip Guides
-    for (let r = 0; r < ROWS.length; r++) {
-      const riserGeo = new THREE.BoxGeometry(21.5, 0.38, 1.38);
-      const riserMat = new THREE.MeshStandardMaterial({ color: 0x090d1c, roughness: 0.85 });
-      const riser = new THREE.Mesh(riserGeo, riserMat);
-      riser.position.set(0, (r * 0.38) / 2, 3.6 + r * 1.38);
-      scene.add(riser);
-
-      // Floor Guide Strip (Glowing Neon Edge)
-      const stripGeo = new THREE.BoxGeometry(21.5, 0.02, 0.04);
-      const stripMat = new THREE.MeshBasicMaterial({ color: 0x00e5ff, opacity: 0.3, transparent: true });
-      const strip = new THREE.Mesh(stripGeo, stripMat);
-      strip.position.set(0, ((r + 1) * 0.38) / 2 + 0.19, 3.6 + r * 1.38 + 0.69);
-      scene.add(strip);
-    }
-
-    // Color mapper for seat tiers
-    function getSeatHexColor(metric) {
-      if (currentMode === "telemetry") {
-        const ratio = metric.vci / 100;
-        return new THREE.Color().setHSL(0.33 * ratio, 0.95, 0.48);
-      }
-      if (selectedSeats.has(metric.seatId)) {
-        return new THREE.Color(0x00e5ff); // Selected Cyan
-      }
-      if (metric.vci >= 80) return new THREE.Color(0x00f59b); // Emerald Prime
-      if (metric.vci >= 55) return new THREE.Color(0xffb800); // Amber Standard
-      return new THREE.Color(0xff3366); // Ruby Front Discount
-    }
-
-    const seatBaseGeo = new THREE.BoxGeometry(0.56, 0.44, 0.52);
-    const seatBackGeo = new THREE.BoxGeometry(0.56, 0.68, 0.14);
-    const armrestGeo = new THREE.BoxGeometry(0.08, 0.36, 0.46);
-
-    function buildAuditoriumSeats() {
-      seatInteractiveMeshes.forEach(mesh => scene.remove(mesh));
-      seatInteractiveMeshes = [];
-      seatDataMap.clear();
-
-      for (let r = 0; r < ROWS.length; r++) {
-        for (let c = 1; c <= SEATS_PER_ROW; c++) {
-          const metric = calculateErgonomics(r, c);
-
-          const seatGroup = new THREE.Group();
-          const baseColor = getSeatHexColor(metric);
-
-          const cushionMat = new THREE.MeshStandardMaterial({
-            color: baseColor,
-            roughness: 0.35,
-            metalness: 0.15
-          });
-
-          // Seat cushion
-          const seatBottom = new THREE.Mesh(seatBaseGeo, cushionMat);
-          seatBottom.position.y = 0.22;
-
-          // Backrest
-          const seatBack = new THREE.Mesh(seatBackGeo, cushionMat);
-          seatBack.position.set(0, 0.65, 0.2);
-          seatBack.rotation.x = -0.16;
-
-          // Armrests
-          const armMat = new THREE.MeshStandardMaterial({ color: 0x11162a, roughness: 0.6 });
-          const armL = new THREE.Mesh(armrestGeo, armMat);
-          armL.position.set(-0.31, 0.42, 0.05);
-          const armR = new THREE.Mesh(armrestGeo, armMat);
-          armR.position.set(0.31, 0.42, 0.05);
-
-          seatGroup.add(seatBottom);
-          seatGroup.add(seatBack);
-          seatGroup.add(armL);
-          seatGroup.add(armR);
-
-          // Amphitheater curved rotation toward screen center (0, 4.8, 0)
-          const angleToCenter = Math.atan2(metric.pos.x, metric.pos.z + 5.5);
-          seatGroup.rotation.y = angleToCenter * 0.8;
-          seatGroup.position.set(metric.pos.x, metric.pos.y, metric.pos.z);
-
-          // Raycasting association
-          seatBottom.userData = { seatId: metric.seatId, metric };
-          seatBack.userData = { seatId: metric.seatId, metric };
-          seatGroup.userData = { seatId: metric.seatId, metric, cushionMat };
-
-          scene.add(seatGroup);
-          seatInteractiveMeshes.push(seatGroup);
-          seatDataMap.set(metric.seatId, { group: seatGroup, metric, cushionMat });
-        }
-      }
-    }
-
-    function renderMultiplexPills() {
-      const container = document.getElementById("theatre-pills-container");
-      container.innerHTML = "";
-
-      Object.values(COIMBATORE_THEATRES).forEach(theatre => {
-        const isActive = theatre.id === currentTheatre.id;
-        const pill = document.createElement("button");
-        
-        pill.className = `px-3.5 py-1.5 rounded-xl text-xs font-medium transition flex items-center gap-2.5 cursor-pointer ${
-          isActive 
-            ? 'gold-pill-active text-amber-100 font-semibold' 
-            : 'text-slate-400 hover:text-white hover:bg-white/5 border border-transparent'
-        }`;
-
-        pill.innerHTML = `
-          <div class="flex items-center gap-1.5">
-            <span class="w-2 h-2 rounded-full ${isActive ? 'bg-amber-400 shadow-[0_0_8px_rgba(212,175,55,1)] animate-pulse' : 'bg-slate-600'}"></span>
-            <span class="tracking-tight text-[12px]">${theatre.shortName}</span>
-          </div>
-          <span class="font-mono-tech text-[10px] px-1.5 py-0.5 rounded-md ${
-            isActive ? 'bg-amber-950/90 text-amber-300 border border-amber-500/40' : 'bg-black/60 text-slate-500'
-          }">${theatre.distance}</span>
-        `;
-
-        pill.addEventListener("click", () => {
-          currentTheatre = theatre;
-          renderMultiplexPills();
-          updateActiveTheatreUI();
-        });
-
-        container.appendChild(pill);
+    function setTheatre(name) {
+      currentTheatre = name;
+      document.getElementById('dispTheatre').innerText = name.split(' - ')[0];
+      document.querySelectorAll('.theatre-pill').forEach(el => {
+        el.classList.toggle('active', el.innerText.includes(name.split(' ')[0]));
       });
+      updateCartDisplay();
     }
 
-    function updateActiveTheatreUI() {
-      document.getElementById("active-theatre-mobile-badge").textContent = currentTheatre.shortName;
-      document.getElementById("theatre-display-name").textContent = currentTheatre.name;
-      document.getElementById("theatre-display-address").textContent = currentTheatre.address;
-      document.getElementById("theatre-display-screen").textContent = `📽️ ${currentTheatre.screen}`;
-      document.getElementById("theatre-pill-distance").textContent = `📍 ${currentTheatre.distance}`;
+    function updateCartDisplay() {
+      const cartContainer = document.getElementById('cartItems');
+      const totalContainer = document.getElementById('dispTotal');
+      cartContainer.innerHTML = '';
+
+      if (selectedSeats.size === 0) {
+        cartContainer.innerHTML = '<div style="font-size:12px; color:#64748B;">Click on any 3D seat to select.</div>';
+        totalContainer.innerText = '₹0';
+        return;
+      }
+
+      let total = 0;
+      selectedSeats.forEach((price, seatId) => {
+        total += price;
+        const item = document.createElement('div');
+        item.className = 'cart-item';
+        item.innerHTML = `<span>Seat <strong>${seatId}</strong></span><span>₹${price}</span>`;
+        cartContainer.appendChild(item);
+      });
+
+      totalContainer.innerText = `₹${total}`;
+    }
+
+    function openBookingPass() {
+      if (selectedSeats.size === 0) {
+        alert("Please select at least 1 seat in the 3D theatre first!");
+        return;
+      }
+
+      document.getElementById('passTheatre').innerText = currentTheatre;
+      const seatList = Array.from(selectedSeats.keys()).join(', ');
+      document.getElementById('passSeats').innerText = seatList;
       
-      const gmapsUrl = `https://www.google.com/maps/search/?api=1&query=${currentTheatre.lat},${currentTheatre.lon}`;
-      document.getElementById("gmaps-direct-btn").href = gmapsUrl;
-      document.getElementById("theatre-maps-link").href = gmapsUrl;
-      document.getElementById("theatre-nav-text").textContent = `Directions (${currentTheatre.shortName})`;
+      let total = 0;
+      selectedSeats.forEach(p => total += p);
+      document.getElementById('passTotal').innerText = `₹${total}`;
 
-      document.getElementById("screen-label").textContent = `${currentTheatre.shortName} • ${currentTheatre.screen}`;
-
-      refreshAuditoriumSeats();
-    }
-
-    function refreshAuditoriumSeats() {
-      seatDataMap.forEach((entry, seatId) => {
-        const rowIdx = ROWS.indexOf(entry.metric.rowLetter);
-        entry.metric = calculateErgonomics(rowIdx, entry.metric.seatNum);
-
-        entry.cushionMat.color.copy(getSeatHexColor(entry.metric));
-        if (selectedSeats.has(seatId)) {
-          entry.cushionMat.emissive.setHex(0x00e5ff);
-          entry.cushionMat.emissiveIntensity = 0.5;
-        } else {
-          entry.cushionMat.emissive.setHex(0x000000);
-        }
-      });
-
-      renderCartAndBilling();
-      updateHoverHUD(hoveredSeatId);
-    }
-
-    const raycaster = new THREE.Raycaster();
-    const mouse = new THREE.Vector2();
-
-    function onPointerMove(event) {
-      const rect = renderer.domElement.getBoundingClientRect();
-      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
-      raycaster.setFromCamera(mouse, camera);
-      const hits = raycaster.intersectObjects(scene.children, true);
-
-      let detected = null;
-      for (let hit of hits) {
-        if (hit.object.userData && hit.object.userData.seatId) {
-          detected = hit.object.userData.seatId;
-          break;
-        }
-      }
-
-      if (detected) {
-        hoveredSeatId = detected;
-        updateHoverHUD(detected);
-      }
-    }
-
-    function onPointerClick(event) {
-      const rect = renderer.domElement.getBoundingClientRect();
-      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
-      raycaster.setFromCamera(mouse, camera);
-      const hits = raycaster.intersectObjects(scene.children, true);
-
-      for (let hit of hits) {
-        if (hit.object.userData && hit.object.userData.seatId) {
-          const sid = hit.object.userData.seatId;
-          if (selectedSeats.has(sid)) {
-            selectedSeats.delete(sid);
-          } else {
-            selectedSeats.add(sid);
-          }
-          refreshAuditoriumSeats();
-          break;
-        }
-      }
-    }
-
-    renderer.domElement.addEventListener("mousemove", onPointerMove);
-    renderer.domElement.addEventListener("click", onPointerClick);
-
-    function updateHoverHUD(seatId) {
-      const entry = seatDataMap.get(seatId);
-      if (!entry) return;
-      const m = entry.metric;
-
-      document.getElementById("hud-seat-id").textContent = m.seatId;
-      document.getElementById("hud-vci").textContent = `${m.vci} / 100`;
-      document.getElementById("hud-price").textContent = `₹${m.price}`;
-      document.getElementById("hud-tilt").textContent = `${m.verticalTiltDeg}° ${m.verticalTiltDeg < 20 ? '(Ideal)' : '(High)'}`;
-      document.getElementById("hud-fov").textContent = `${m.fovHorizontalDeg}° (THX Rec: 36°–40°)`;
-    }
-
-    // Camera Presets
-    const camButtons = {
-      director: document.getElementById("cam-director"),
-      topdown: document.getElementById("cam-topdown"),
-      sweetspot: document.getElementById("cam-sweetspot"),
-      front: document.getElementById("cam-front")
-    };
-
-    function resetCamButtonStyles() {
-      Object.values(camButtons).forEach(btn => {
-        btn.className = "cam-preset-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white transition";
-      });
-    }
-
-    camButtons.director.addEventListener("click", () => {
-      resetCamButtonStyles();
-      camButtons.director.className = "cam-preset-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 shadow-sm transition";
-      camera.position.set(-9, 11, 23);
-      controls.target.set(0, 3.2, 8.5);
-      controls.update();
-    });
-
-    camButtons.topdown.addEventListener("click", () => {
-      resetCamButtonStyles();
-      camButtons.topdown.className = "cam-preset-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 shadow-sm transition";
-      camera.position.set(0, 26, 9.5);
-      controls.target.set(0, 0, 9.5);
-      controls.update();
-    });
-
-    camButtons.sweetspot.addEventListener("click", () => {
-      resetCamButtonStyles();
-      camButtons.sweetspot.className = "cam-preset-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 shadow-sm transition";
-      const f7 = seatDataMap.get("F7")?.metric;
-      if (f7) {
-        camera.position.set(f7.pos.x, f7.pos.y + 0.88, f7.pos.z + 0.15);
-        controls.target.set(0, 4.8, 0);
-        controls.update();
-      }
-    });
-
-    camButtons.front.addEventListener("click", () => {
-      resetCamButtonStyles();
-      camButtons.front.className = "cam-preset-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-rose-500/20 text-rose-300 border border-rose-500/50 shadow-sm transition";
-      const a7 = seatDataMap.get("A7")?.metric;
-      if (a7) {
-        camera.position.set(a7.pos.x, a7.pos.y + 0.88, a7.pos.z + 0.15);
-        controls.target.set(0, 4.8, 0);
-        controls.update();
-      }
-    });
-
-    function renderCartAndBilling() {
-      const count = selectedSeats.size;
-      document.getElementById("cart-count").textContent = count;
-      const listContainer = document.getElementById("cart-items-list");
-      listContainer.innerHTML = "";
-
-      let baseSum = 0;
-      let discountSum = 0;
-
-      if (count === 0) {
-        listContainer.innerHTML = `
-          <div class="p-4 rounded-xl bg-slate-900/40 border border-dashed border-slate-800 text-center text-xs text-slate-500">
-            Click seats in the 3D amphitheater to select
-          </div>
-        `;
-        document.getElementById("book-pass-btn").setAttribute("disabled", "true");
-        document.getElementById("book-pass-btn").className = "w-full py-4 rounded-2xl font-extrabold text-xs tracking-wider uppercase bg-slate-800 text-slate-500 cursor-not-allowed transition flex items-center justify-center gap-2 shadow-xl";
-      } else {
-        selectedSeats.forEach(sid => {
-          const item = seatDataMap.get(sid).metric;
-          baseSum += item.price;
-          const isFront = item.rowLetter === "A" || item.rowLetter === "B";
-          if (isFront) discountSum += 45;
-
-          const rowElem = document.createElement("div");
-          rowElem.className = "p-2.5 rounded-xl bg-slate-900/90 border border-slate-800 flex justify-between items-center text-xs";
-          rowElem.innerHTML = `
-            <div>
-              <div class="flex items-center gap-2">
-                <span class="font-bold font-mono-tech text-white text-sm">Seat ${item.seatId}</span>
-                <span class="px-2 py-0.5 rounded text-[10px] font-bold ${
-                  item.vci >= 80 ? 'bg-emerald-950 text-emerald-300 border border-emerald-500/40' :
-                  (isFront ? 'bg-rose-950 text-rose-300 border border-rose-500/40' : 'bg-amber-950 text-amber-300 border border-amber-500/40')
-                }">
-                  ${item.vci >= 80 ? 'Prime Sweet Spot' : (isFront ? '-35% Neck Relief' : 'Standard')}
-                </span>
-              </div>
-              <div class="text-[10px] text-slate-400 mt-0.5">Tilt: ${item.verticalTiltDeg}° • Comfort: ${item.vci}/100</div>
-            </div>
-            <div class="flex items-center gap-2">
-              <span class="font-mono-tech font-bold text-cyan-300 text-sm">₹${item.price}</span>
-              <button data-remove="${item.seatId}" class="remove-seat-btn text-slate-500 hover:text-rose-400 text-sm px-1">✕</button>
-            </div>
-          `;
-          listContainer.appendChild(rowElem);
-        });
-
-        document.getElementById("book-pass-btn").removeAttribute("disabled");
-        document.getElementById("book-pass-btn").className = "w-full py-4 rounded-2xl font-extrabold text-xs tracking-wider uppercase bg-gradient-to-r from-cyan-400 via-sky-500 to-indigo-600 text-black hover:brightness-110 shadow-xl shadow-cyan-500/30 transition flex items-center justify-center gap-2 cursor-pointer pulse-glow";
-      }
-
-      // Remove button listener
-      document.querySelectorAll(".remove-seat-btn").forEach(btn => {
-        btn.addEventListener("click", (e) => {
-          const sid = e.target.getAttribute("data-remove");
-          selectedSeats.delete(sid);
-          refreshAuditoriumSeats();
-        });
-      });
-
-      const convenienceFee = count > 0 ? count * 25 : 0;
-      const grandTotal = baseSum + convenienceFee;
-
-      document.getElementById("bill-base-fare").textContent = `₹${baseSum.toLocaleString('en-IN')}`;
-      document.getElementById("bill-discount").textContent = `-₹${discountSum.toLocaleString('en-IN')}`;
-      document.getElementById("bill-fees").textContent = `₹${convenienceFee.toLocaleString('en-IN')}`;
-      document.getElementById("bill-grand-total").textContent = `₹${grandTotal.toLocaleString('en-IN')}`;
-    }
-
-    document.getElementById("clear-cart-btn").addEventListener("click", () => {
-      selectedSeats.clear();
-      refreshAuditoriumSeats();
-    });
-
-    // Genre & Slot Chips selection
-    document.querySelectorAll(".genre-chip").forEach(btn => {
-      btn.addEventListener("click", () => {
-        document.querySelectorAll(".genre-chip").forEach(b => {
-          b.className = "genre-chip px-2 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 text-slate-400 border border-slate-800 hover:text-white transition";
-        });
-        btn.className = "genre-chip px-2 py-1.5 rounded-xl text-xs font-semibold bg-cyan-950 text-cyan-300 border border-cyan-500/50 shadow-sm transition";
-        selectedGenre = btn.getAttribute("data-genre");
-        refreshAuditoriumSeats();
-      });
-    });
-
-    document.querySelectorAll(".slot-chip").forEach(btn => {
-      btn.addEventListener("click", () => {
-        document.querySelectorAll(".slot-chip").forEach(b => {
-          b.className = "slot-chip px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 text-slate-400 border border-slate-800 hover:text-white transition";
-        });
-        btn.className = "slot-chip px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-cyan-950 text-cyan-300 border border-cyan-500/50 shadow-sm transition";
-        selectedSlot = btn.getAttribute("data-slot");
-        refreshAuditoriumSeats();
-      });
-    });
-
-    // Mode Toggle (Booking vs Heatmap)
-    const bookingModeBtn = document.getElementById("mode-booking-btn");
-    const telemetryModeBtn = document.getElementById("mode-telemetry-btn");
-
-    bookingModeBtn.addEventListener("click", () => {
-      currentMode = "booking";
-      bookingModeBtn.className = "px-3.5 py-1.5 rounded-xl text-xs font-bold text-cyan-300 bg-cyan-950/80 border border-cyan-500/40 transition";
-      telemetryModeBtn.className = "px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition";
-      refreshAuditoriumSeats();
-    });
-
-    telemetryModeBtn.addEventListener("click", () => {
-      currentMode = "telemetry";
-      telemetryModeBtn.className = "px-3.5 py-1.5 rounded-xl text-xs font-bold text-emerald-300 bg-emerald-950/80 border border-emerald-500/40 transition";
-      bookingModeBtn.className = "px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition";
-      refreshAuditoriumSeats();
-    });
-
-    // Ticket Pass Modal and QR Code Generation
-    const ticketModal = document.getElementById("ticket-modal");
-
-    document.getElementById("book-pass-btn").addEventListener("click", () => {
-      if (selectedSeats.size === 0) return;
-
-      const seatArray = Array.from(selectedSeats);
-      const totalAmount = document.getElementById("bill-grand-total").textContent;
-
-      document.getElementById("pass-theatre-title").textContent = currentTheatre.name;
-      document.getElementById("pass-theatre-screen").textContent = currentTheatre.screen;
-      document.getElementById("pass-genre").textContent = `${selectedGenre} Presentation`;
-      document.getElementById("pass-slot").textContent = `${selectedSlot} Show`;
-      document.getElementById("pass-seats").textContent = seatArray.join(", ");
-      document.getElementById("pass-paid").textContent = totalAmount;
-
-      // QR Code Render
-      const qrBox = document.getElementById("qrcode-box");
-      qrBox.innerHTML = "";
-      const payload = `SCREENSENSE-CBE-PASS|THEATRE=${currentTheatre.name}|SEATS=${seatArray.join(",")}|TOTAL=${totalAmount}|LATLON=${currentTheatre.lat},${currentTheatre.lon}|VERIFIED=2026-PASS-AUTH`;
-
+      const qrBox = document.getElementById('qrTarget');
+      qrBox.innerHTML = '';
+      const payload = `SCREENSENSE|THEATRE=${currentTheatre}|SEATS=${seatList}|TOTAL=INR_${total}|STATUS=CONFIRMED`;
       new QRCode(qrBox, {
         text: payload,
         width: 140,
         height: 140,
-        colorDark: "#05070e",
-        colorLight: "#ffffff",
+        colorDark: "#0A0E1A",
+        colorLight: "#FFFFFF",
         correctLevel: QRCode.CorrectLevel.H
       });
 
-      // Confetti burst
-      confetti({
-        particleCount: 90,
-        spread: 75,
-        origin: { y: 0.6 }
-      });
+      document.getElementById('passModal').classList.add('show');
 
-      ticketModal.classList.remove("hidden");
-      ticketModal.classList.add("flex");
-    });
+      if (typeof confetti === 'function') {
+        confetti({ particleCount: 70, spread: 60, origin: { y: 0.6 } });
+      }
+    }
 
-    document.getElementById("close-modal-btn").addEventListener("click", () => {
-      ticketModal.classList.add("hidden");
-      ticketModal.classList.remove("flex");
-    });
+    function closeBookingPass() {
+      document.getElementById('passModal').classList.remove('show');
+    }
 
-    document.getElementById("download-pass-png-btn").addEventListener("click", () => {
-      const qrImg = document.querySelector("#qrcode-box img");
-      if (qrImg) {
-        const link = document.createElement("a");
-        link.download = `ScreenSense_Pass_${Array.from(selectedSeats)[0]}.png`;
-        link.href = qrImg.src;
-        link.click();
+    // --- Three.js Setup ---
+    const canvas = document.getElementById('cinemaCanvas');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x05070e);
+
+    const camera = new THREE.PerspectiveCamera(45, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
+    // Camera positioned behind seats looking towards screen
+    camera.position.set(0, 18, 36);
+
+    const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, powerPreference: "high-performance" });
+    renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.maxPolarAngle = Math.PI / 2.05;
+    controls.minDistance = 6;
+    controls.maxDistance = 65;
+    controls.target.set(0, 5, 2);
+
+    const ambLight = new THREE.AmbientLight(0xffffff, 0.85);
+    scene.add(ambLight);
+
+    const dirLight = new THREE.DirectionalLight(0xffecd2, 1.2);
+    dirLight.position.set(0, 20, 20);
+    scene.add(dirLight);
+
+    // --- SCREEN PLACEMENT (FRONT AT Z = -10) ---
+    const screenWidth = 24;
+    const screenHeight = 10;
+    const screenGeo = new THREE.PlaneGeometry(screenWidth, screenHeight, 32, 1);
+    
+    // Curvature towards audience (+Z)
+    const posAttr = screenGeo.attributes.position;
+    for (let i = 0; i < posAttr.count; i++) {
+      const x = posAttr.getX(i);
+      posAttr.setZ(i, (x * x) * 0.015);
+    }
+    screenGeo.computeVertexNormals();
+
+    const screenMat = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide });
+    const screenMesh = new THREE.Mesh(screenGeo, screenMat);
+    screenMesh.position.set(0, 6.5, -10);
+    scene.add(screenMesh);
+
+    // Screen Outer Border
+    const frameGeo = new THREE.BoxGeometry(screenWidth + 0.6, screenHeight + 0.6, 0.2);
+    const frameMat = new THREE.MeshStandardMaterial({ color: 0xD4AF37, roughness: 0.3, metalness: 0.8 });
+    const frameMesh = new THREE.Mesh(frameGeo, frameMat);
+    frameMesh.position.set(0, 6.5, -10.15);
+    scene.add(frameMesh);
+
+    // Auditorium Floor
+    const floorGeo = new THREE.PlaneGeometry(45, 55);
+    const floorMat = new THREE.MeshStandardMaterial({ color: 0x080c14, roughness: 0.8 });
+    const floorMesh = new THREE.Mesh(floorGeo, floorMat);
+    floorMesh.rotation.x = -Math.PI / 2;
+    floorMesh.position.set(0, -0.05, 12);
+    scene.add(floorMesh);
+
+    // --- SEATS GENERATION (FACING DIRECTLY TO SCREEN AT Z = -10) ---
+    const seatObjects = [];
+    const rows = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+    const cols = 12;
+
+    const seatBaseGeo = new THREE.BoxGeometry(0.85, 0.65, 0.8);
+    const seatBackGeo = new THREE.BoxGeometry(0.85, 1.1, 0.25);
+
+    rows.forEach((rowName, rIdx) => {
+      // Row A is closest to screen (Z = 2), Row H is farthest (Z = 22)
+      const zPos = 2 + (rIdx * 2.8);
+      const yElevation = (rIdx * 0.95);
+
+      let tierColor = 0xffb800; // Standard (amber)
+      let price = 180;
+      if (rIdx < 2) {
+        tierColor = 0xff3366; // Front row discount (red)
+        price = 110;
+      } else if (rIdx >= 4 && rIdx <= 6) {
+        tierColor = 0x00f59b; // Sweet spot (emerald green)
+        price = 240;
+      }
+
+      for (let c = 1; c <= cols; c++) {
+        const seatId = `${rowName}${c}`;
+        const xOffset = (c - (cols / 2 + 0.5)) * 1.45;
+
+        // Angle pointing towards center of screen (0, 6.5, -10)
+        const angle = Math.atan2(xOffset, zPos - (-10));
+
+        const seatGroup = new THREE.Group();
+        seatGroup.position.set(xOffset, yElevation, zPos);
+        // Corrected Rotation: Chairs face front towards screen
+        seatGroup.rotation.y = angle;
+
+        const isPreselected = selectedSeats.has(seatId);
+        const curColor = isPreselected ? 0xD4AF37 : tierColor;
+
+        const baseMat = new THREE.MeshStandardMaterial({ color: curColor, roughness: 0.4 });
+        
+        // Seat Cushion
+        const seatBase = new THREE.Mesh(seatBaseGeo, baseMat);
+        seatBase.position.y = 0.32;
+        seatGroup.add(seatBase);
+
+        // Seat Backrest (Positioned at +Z so person faces -Z screen)
+        const seatBack = new THREE.Mesh(seatBackGeo, baseMat);
+        seatBack.position.set(0, 0.95, 0.3);
+        seatGroup.add(seatBack);
+
+        seatGroup.userData = {
+          seatId: seatId,
+          price: price,
+          defaultColor: tierColor,
+          baseMat: baseMat,
+          selected: isPreselected
+        };
+
+        scene.add(seatGroup);
+        seatObjects.push(seatGroup);
       }
     });
 
-    // Window Resize Handler
-    window.addEventListener("resize", () => {
-      const w = container.clientWidth;
-      const h = container.clientHeight;
-      camera.aspect = w / h;
-      camera.updateProjectionMatrix();
-      renderer.setSize(w, h);
+    // --- Raycasting (3D Seat Click Selection) ---
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+
+    window.addEventListener('pointerdown', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom) return;
+
+      mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(scene.children, true);
+
+      if (intersects.length > 0) {
+        let root = intersects[0].object;
+        while (root.parent && root.parent !== scene) {
+          root = root.parent;
+        }
+
+        if (root.userData && root.userData.seatId) {
+          const u = root.userData;
+          u.selected = !u.selected;
+
+          if (u.selected) {
+            selectedSeats.set(u.seatId, u.price);
+            u.baseMat.color.setHex(0xD4AF37);
+          } else {
+            selectedSeats.delete(u.seatId);
+            u.baseMat.color.setHex(u.defaultColor);
+          }
+          updateCartDisplay();
+        }
+      }
     });
 
-    // Initialization
-    renderMultiplexPills();
-    updateActiveTheatreUI();
-    buildAuditoriumSeats();
+    // Camera Views
+    function setCamera(mode) {
+      document.querySelectorAll('.cam-btn').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
 
-    // Render Animation Loop
+      if (mode === 'director') {
+        camera.position.set(0, 18, 36);
+        controls.target.set(0, 5, 2);
+      } else if (mode === 'top') {
+        camera.position.set(0, 42, 10);
+        controls.target.set(0, 0, 10);
+      } else if (mode === 'pov') {
+        camera.position.set(0, 6.2, 16);
+        controls.target.set(0, 6.5, -10);
+      } else if (mode === 'front') {
+        camera.position.set(0, 2.2, 4);
+        controls.target.set(0, 6.5, -10);
+      }
+      controls.update();
+    }
+
+    window.addEventListener('resize', () => {
+      camera.aspect = canvas.clientWidth / canvas.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+    });
+
     function animate() {
       requestAnimationFrame(animate);
       controls.update();
-
-      // Screen emissive breathing light pulsation
-      const time = performance.now() * 0.0016;
-      screenMat.emissiveIntensity = 0.32 + Math.sin(time) * 0.06;
-
       renderer.render(scene, camera);
     }
     animate();
+    updateCartDisplay();
   </script>
 </body>
 </html>
