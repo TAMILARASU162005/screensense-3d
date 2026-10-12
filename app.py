@@ -2,7 +2,7 @@
 ScreenSense 3D - Interactive Streamlit Dashboard
 ------------------------------------------------
 Visualizes theater seating geometry, Visual Comfort Index (VCI),
-and predicts real-time dynamic pricing using the trained LightGBM model.
+and predicts real-time dynamic pricing using trained RandomForestRegressor.
 """
 
 import os
@@ -10,17 +10,14 @@ import pickle
 import numpy as np
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
 import streamlit as st
 
-# Configure page layout
 st.set_page_config(
     page_title="ScreenSense 3D | Dynamic Cinema Pricing",
     page_icon="🎬",
     layout="wide"
 )
 
-# Custom header styling
 st.title("🎬 ScreenSense 3D: Ergonomic Seating & Dynamic Pricing")
 st.markdown(
     "Trigonometric field-of-view (FOV) and vertical neck strain analytics "
@@ -30,7 +27,6 @@ st.markdown(
 GEOMETRY_CSV = "theater_seats_geometry.csv"
 MODEL_PKL = "pricing_model.pkl"
 
-# Verify prerequisite artifacts
 if not os.path.exists(GEOMETRY_CSV) or not os.path.exists(MODEL_PKL):
     st.error(
         "Missing required artifacts! Please run `geometry_engine.py` and "
@@ -48,13 +44,13 @@ def load_theater_geometry():
 def load_trained_pipeline():
     with open(MODEL_PKL, "rb") as f:
         artifacts = pickle.load(f)
-    return artifacts["model"]
+    return artifacts["model"], artifacts["feature_columns"]
 
 
 seats_df = load_theater_geometry()
-model = load_trained_pipeline()
+model, feature_columns = load_trained_pipeline()
 
-# --- Sidebar Parameter Controls ---
+# Sidebar Controls
 st.sidebar.header("🕹️ Show Parameters")
 
 selected_genre = st.sidebar.selectbox(
@@ -80,31 +76,27 @@ base_inflation = st.sidebar.slider(
     step=0.05
 )
 
-# --- Feature Preparation for Prediction ---
+# Inference Preparation & Feature Alignment
 inference_df = seats_df.copy()
 inference_df["genre"] = selected_genre
 inference_df["show_slot"] = selected_slot
 inference_df["day_type"] = selected_day
 
-# Ensure categorical typing matches model training
-for col in ["genre", "show_slot", "day_type"]:
-    inference_df[col] = inference_df[col].astype("category")
+# One-hot encoding matching train_model.py
+encoded_input = pd.get_dummies(
+    inference_df[["pos_y", "vertical_tilt_deg", "fov_horizontal_deg", "yaw_deg", "vci_score", "genre", "show_slot", "day_type"]],
+    drop_first=True
+)
 
-features = [
-    "pos_y",
-    "vertical_tilt_deg",
-    "fov_horizontal_deg",
-    "yaw_deg",
-    "vci_score",
-    "genre",
-    "show_slot",
-    "day_type"
-]
+for col in feature_columns:
+    if col not in encoded_input.columns:
+        encoded_input[col] = 0
+encoded_input = encoded_input[feature_columns]
 
-predicted_prices = model.predict(inference_df[features])
+predicted_prices = model.predict(encoded_input)
 inference_df["predicted_price"] = np.round(predicted_prices * base_inflation, 0)
 
-# --- Metric KPI Cards ---
+# Metrics Cards
 col1, col2, col3, col4 = st.columns(4)
 
 with col1:
@@ -125,16 +117,13 @@ with col4:
 
 st.markdown("---")
 
-# --- Interactive Visualizations ---
+# Visualizations
 tab1, tab2 = st.tabs(["💺 Dynamic Seating Heatmap", "📊 Visual Comfort vs Price Analysis"])
 
 with tab1:
     st.subheader("Interactive Screen & Seating Layout")
     st.caption("Hover over any seat to inspect ergonomic angles and recommended fares.")
 
-    # Render Screen indicator
-    screen_indicator = go.Figure()
-    
     fig = px.scatter(
         inference_df,
         x="col",
@@ -159,7 +148,6 @@ with tab1:
         }
     )
 
-    # Invert Y axis so Row A stays nearest to the screen
     fig.update_yaxes(autorange="reversed")
     fig.update_layout(
         height=520,
@@ -167,11 +155,11 @@ with tab1:
         xaxis=dict(tickmode="linear", tick0=1, dtick=1),
     )
 
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
 with tab2:
     st.subheader("Ergonomic Strain vs Dynamic Price Correlation")
-    
+
     scatter_fig = px.scatter(
         inference_df,
         x="vertical_tilt_deg",
@@ -186,9 +174,8 @@ with tab2:
         },
         hover_name="seat_id"
     )
-    st.plotly_chart(scatter_fig, use_container_width=True)
+    st.plotly_chart(scatter_fig, width="stretch")
 
-# --- Seat Data Table View ---
 with st.expander("🔍 View Raw Seat Ergonomics & Pricing Data"):
     st.dataframe(
         inference_df[[
@@ -196,5 +183,5 @@ with st.expander("🔍 View Raw Seat Ergonomics & Pricing Data"):
             "vertical_tilt_deg", "fov_horizontal_deg", "yaw_deg",
             "predicted_price"
         ]],
-        use_container_width=True
+        width="stretch"
     )
