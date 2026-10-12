@@ -2,22 +2,25 @@
 ScreenSense 3D - Enterprise Cinema Ergonomics & Dynamic Booking Engine
 -----------------------------------------------------------------------
 Features:
-- Dual Portal: Customer Booking Experience vs Multiplex Executive Analytics
-- 3D Interactive Virtual Auditorium & Riser Incline Visualizer
-- Real-time Interactive Multi-seat Cart & Dynamic Invoicing
-- Ergonomic Strain Diagnostic & Dead-Zone Recovery telemetry
+- Multiplex & Screen Selection (Standard vs IMAX / EPIQ formats)
+- Dual Portal: Customer Booking vs Multiplex Executive Analytics
+- Real-time Interactive Cart with Dynamic Dynamic Invoicing
+- Instant Digital Boarding Pass with Dynamic QR Code Generation
+- 3D Virtual Auditorium Mesh & Elevation Sightline Diagnostics
 """
 
+import io
 import os
 import pickle
 import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+import qrcode
 import streamlit as st
 
 st.set_page_config(
-    page_title="ScreenSense 3D | Multiplex Platform",
+    page_title="ScreenSense 3D | Commercial Multiplex Platform",
     page_icon="🎬",
     layout="wide"
 )
@@ -26,7 +29,7 @@ GEOMETRY_CSV = "theater_seats_geometry.csv"
 MODEL_PKL = "pricing_model.pkl"
 
 if not os.path.exists(GEOMETRY_CSV) or not os.path.exists(MODEL_PKL):
-    st.error("Missing required artifacts! Please run geometry_engine.py and train_model.py first.")
+    st.error("Missing required artifacts! Run geometry_engine.py and train_model.py first.")
     st.stop()
 
 
@@ -45,23 +48,31 @@ def load_trained_pipeline():
 seats_df = load_theater_geometry()
 model, feature_columns = load_trained_pipeline()
 
-# Session State for User Cart
 if "selected_seats" not in st.session_state:
     st.session_state.selected_seats = []
 
 # --- Sidebar Portal Navigation ---
-st.sidebar.image("https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=400&q=80", caption="ScreenSense 3D Telemetry")
+st.sidebar.title("🎦 ScreenSense 3D")
 app_mode = st.sidebar.radio(
-    "Select Interface Portal",
-    ["🎟️ Customer Booking Portal", "📊 Theatre Executive Analytics"]
+    "Select Platform Mode",
+    ["🎟️ Customer Cinema Booking", "📊 Executive Yield & 3D Analytics"]
 )
 
 st.sidebar.markdown("---")
-st.sidebar.subheader("🎬 Show Configurations")
+st.sidebar.subheader("🏢 Multiplex & Show Telemetry")
+
+selected_cinema = st.sidebar.selectbox(
+    "Select Multiplex Chain",
+    ["PVR INOX - Screen 1 (Standard 4K)", "SPI Cinemas - Audi 3 (Dolby Atmos)", "EPIQ Large Format - Screen 2"]
+)
+
 selected_genre = st.sidebar.selectbox("Film Genre", ["Action", "Drama", "Horror", "Comedy", "Sci-Fi"])
 selected_slot = st.sidebar.selectbox("Screening Slot", ["Morning", "Matinee", "Evening", "Night"])
 selected_day = st.sidebar.radio("Day Type", ["Weekday", "Weekend"])
-demand_surcharge = st.sidebar.slider("Dynamic Demand Multiplier", min_value=0.8, max_value=1.5, value=1.0, step=0.05)
+demand_surcharge = st.sidebar.slider("Peak Demand Multiplier", min_value=0.8, max_value=1.5, value=1.0, step=0.05)
+
+# Screen format multiplier
+screen_multiplier = 1.25 if "EPIQ" in selected_cinema else (1.10 if "SPI" in selected_cinema else 1.0)
 
 # --- Feature Preparation & Model Inference ---
 inference_df = seats_df.copy()
@@ -80,9 +91,9 @@ for col in feature_columns:
 encoded_input = encoded_input[feature_columns]
 
 predicted_prices = model.predict(encoded_input)
-inference_df["predicted_price"] = np.round(predicted_prices * demand_surcharge, 0)
+inference_df["predicted_price"] = np.round(predicted_prices * demand_surcharge * screen_multiplier, 0)
 
-# Ergonomic Tier Labeling
+
 def assign_tier(vci):
     if vci >= 80:
         return "Prime Comfort (Sweet Spot)"
@@ -94,35 +105,43 @@ def assign_tier(vci):
 inference_df["seat_tier"] = inference_df["vci_score"].apply(assign_tier)
 
 
-# ==========================================
-# PORTAL 1: CUSTOMER BOOKING EXPERIENCE
-# ==========================================
-if app_mode == "🎟️ Customer Booking Portal":
-    st.title("🎬 ScreenSense 3D: Smart Ergonomic Cinema Booking")
-    st.caption("Fair dynamic pricing based on neck comfort, display sightlines, and film genre.")
+def generate_qr(ticket_payload: str):
+    qr = qrcode.QRCode(version=1, box_size=6, border=2)
+    qr.add_data(ticket_payload)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color="#1E1E1E", back_color="white")
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    return buf.getvalue()
 
-    # Top KPI Strip
+
+# ==========================================
+# PORTAL 1: CUSTOMER CINEMA BOOKING
+# ==========================================
+if app_mode == "🎟️ Customer Cinema Booking":
+    st.title(f"🎬 {selected_cinema}")
+    st.caption(f"Transparent Pricing Engine: Dynamic pricing based on screen distance, neck strain, and {selected_genre} visual intensity.")
+
     k1, k2, k3, k4 = st.columns(4)
     with k1:
-        st.metric("Playing Genre", selected_genre)
+        st.metric("Genre / Screen", f"{selected_genre}")
     with k2:
-        st.metric("Show Timing", f"{selected_slot} ({selected_day})")
+        st.metric("Timing", f"{selected_slot} • {selected_day}")
     with k3:
         front_fare = int(inference_df[inference_df["row"] == "A"]["predicted_price"].mean())
-        st.metric("Front Row Ergonomic Fare", f"₹{front_fare}", delta="-35% Discount", delta_color="normal")
+        st.metric("Front Row Fair Fare", f"₹{front_fare}", delta="-35% Comfort Rebate")
     with k4:
         prime_fare = int(inference_df[inference_df["row"] == "F"]["predicted_price"].mean())
-        st.metric("Sweet-Spot Prime Fare", f"₹{prime_fare}", delta="+Premium Tier", delta_color="inverse")
+        st.metric("Sweet-Spot Prime Fare", f"₹{prime_fare}", delta="+THX Calibrated")
 
     st.markdown("---")
 
-    col_view, col_cart = st.columns([2.5, 1.2])
+    col_view, col_cart = st.columns([2.4, 1.3])
 
     with col_view:
-        st.subheader("💺 Interactive Theater Floor Plan")
-        st.info("💡 **Front Rows (A, B)** feature reduced fares due to screen proximity. **Rows E, F, G** offer SMPTE optimal viewing.")
+        st.subheader("💺 Cinema Screen & Layout")
+        st.info("💡 Screen is at the top. Front row seats (A–B) have reduced fares to compensate for neck tilt. Rows E–G are THX certified prime spots.")
 
-        # Interactive 2D Seating Chart
         fig_2d = px.scatter(
             inference_df,
             x="col",
@@ -144,29 +163,28 @@ if app_mode == "🎟️ Customer Booking Portal":
                 "Ergonomic Discounted (Front Rows)": "#EF553B"
             }
         )
-        fig_2d.update_yaxes(autorange="reversed", title="Row (A is closest to screen)")
+        fig_2d.update_yaxes(autorange="reversed", title="Row (A = Front)")
         fig_2d.update_xaxes(title="Seat Number", tickmode="linear", dtick=1)
         fig_2d.update_layout(
             height=460,
-            margin=dict(l=10, r=10, t=20, b=20),
+            margin=dict(l=10, r=10, t=10, b=10),
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
         )
         st.plotly_chart(fig_2d, width="stretch")
 
     with col_cart:
-        st.subheader("🛒 Seat Selection & Cart")
-        
+        st.subheader("🛒 Ticket Selection & Invoice")
+
         all_seat_list = inference_df["seat_id"].tolist()
         user_picks = st.multiselect(
-            "Choose your seats:",
+            "Pick Seats:",
             options=all_seat_list,
             default=st.session_state.selected_seats,
-            placeholder="Select seats (e.g. A5, F7)..."
+            placeholder="Select seats (e.g. A4, F6)..."
         )
         st.session_state.selected_seats = user_picks
 
         if user_picks:
-            st.markdown("#### 🧾 Booking Invoice Summary")
             selected_records = inference_df[inference_df["seat_id"].isin(user_picks)]
             total_fare = 0.0
 
@@ -179,41 +197,72 @@ if app_mode == "🎟️ Customer Booking Portal":
                 with st.container():
                     st.markdown(f"**Seat {seat['seat_id']}** • ₹{int(fare)}")
                     if vci < 60:
-                        st.warning(f"⚠️ High neck tilt ({tilt:.1f}°). Visual fatigue rating: {vci:.0f}/100", icon="⚠️")
+                        st.warning(f"⚠️ {tilt:.1f}° Neck Tilt | Comfort: {vci:.0f}/100", icon="⚠️")
                     else:
-                        st.success(f"✅ Prime viewing angle ({tilt:.1f}° tilt). Comfort: {vci:.0f}/100", icon="✨")
+                        st.success(f"✨ {tilt:.1f}° Sightline | Comfort: {vci:.0f}/100", icon="✨")
                     st.divider()
 
             convenience_fee = len(user_picks) * 25.0
             grand_total = total_fare + convenience_fee
 
-            st.write(f"**Base Ticket Total:** ₹{int(total_fare):,}")
-            st.write(f"**Convenience Charges:** ₹{int(convenience_fee):,}")
-            st.markdown(f"### **Total Payable: ₹{int(grand_total):,}**")
+            st.write(f"**Base Fares:** ₹{int(total_fare):,}")
+            st.write(f"**Booking Charges:** ₹{int(convenience_fee):,}")
+            st.markdown(f"### **Payable: ₹{int(grand_total):,}**")
 
-            if st.button("💳 Confirm Booking & Pay Now", type="primary", use_container_width=True):
+            if st.button("🎟️ Complete Payment & Generate Boarding Pass", type="primary", use_container_width=True):
+                st.session_state.booked_confirmed = True
                 st.balloons()
-                st.success(f"🎉 Booking Confirmed for {', '.join(user_picks)}! E-Tickets sent via SMS.")
         else:
-            st.info("Select seats on the left to review dynamic pricing and comfort diagnostics.")
+            st.info("Select seats on the theater floor plan to view live ergonomic pricing.")
+
+    # --- Live Boarding Pass & QR Pass Modal ---
+    if st.session_state.get("booked_confirmed", False) and user_picks:
+        st.markdown("---")
+        st.subheader("🎟️ Official ScreenSense 3D Digital Boarding Pass")
+
+        pass_c1, pass_c2 = st.columns([2, 1])
+
+        with pass_c1:
+            st.markdown(f"""
+            ### **{selected_cinema}**
+            * **Movie Experience:** {selected_genre} Film Presentation
+            * **Show Schedule:** {selected_slot} Slot ({selected_day})
+            * **Confirmed Seats:** **{', '.join(user_picks)}**
+            * **Total Paid:** **₹{int(grand_total):,}** (Inclusive of taxes & ergonomics adjustment)
+            * **Auditorium Gate:** Gate 04 • Audi 02
+            """)
+            st.caption("Valid for single entry. Verified against ScreenSense 3D dynamic seating registry.")
+
+        with pass_c2:
+            ticket_payload = (
+                f"SCREENSENSE-3D-PASS|CINEMA={selected_cinema}|SEATS={','.join(user_picks)}|"
+                f"TOTAL=INR_{int(grand_total)}|GENRE={selected_genre}|SLOT={selected_slot}"
+            )
+            qr_bytes = generate_qr(ticket_payload)
+            st.image(qr_bytes, caption="Scan at Cinema Turnstile", width=180)
+            st.download_button(
+                label="📥 Download Gate Pass QR",
+                data=qr_bytes,
+                file_name="screensense_ticket_pass.png",
+                mime="image/png"
+            )
 
 
 # ==========================================
-# PORTAL 2: THEATRE EXECUTIVE ANALYTICS
+# PORTAL 2: EXECUTIVE YIELD & 3D ANALYTICS
 # ==========================================
 else:
-    st.title("📊 ScreenSense 3D: Multiplex Business Analytics")
-    st.caption("Commercial yield optimization, 3D auditorium elevation, and dead-zone recovery.")
+    st.title("📊 ScreenSense 3D: Multiplex Executive Telemetry")
+    st.caption("3D Spatial Geometry Engine, Sightline Coordinates, and Occupancy Yield Modeling.")
 
-    t1, t2 = st.tabs(["🏛️ 3D Virtual Auditorium Visualizer", "📈 Financial Yield & Dead-Zone Recovery"])
+    t1, t2 = st.tabs(["🏛️ 3D Virtual Auditorium Mesh", "📈 Dead-Zone Yield Redistribution"])
 
     with t1:
-        st.subheader("Auditorium Incline & Sightline 3D Spatial Mesh")
-        st.caption("Mouse over the model to rotate, tilt, and inspect auditorium elevation angles.")
+        st.subheader("Auditorium Spatial Coordinate Grid")
+        st.caption("Interactive 3D model. Click and drag to rotate the auditorium and view sightline elevation.")
 
         fig_3d = go.Figure()
 
-        # Add Seating Points in 3D
         fig_3d.add_trace(go.Scatter3d(
             x=inference_df["col"],
             y=inference_df["pos_y"],
@@ -223,16 +272,16 @@ else:
                 size=6,
                 color=inference_df["vci_score"],
                 colorscale="Viridis",
-                colorbar=dict(title="Comfort (VCI)"),
+                colorbar=dict(title="VCI Score"),
                 opacity=0.9
             ),
-            text=[f"Seat: {sid}<br>Row: {r}<br>Tilt: {t:.1f}°<br>Price: ₹{p:.0f}" 
+            text=[f"Seat: {sid}<br>Row: {r}<br>Tilt: {t:.1f}°<br>Price: ₹{p:.0f}"
                   for sid, r, t, p in zip(inference_df["seat_id"], inference_df["row"], inference_df["vertical_tilt_deg"], inference_df["predicted_price"])],
             hoverinfo="text",
-            name="Auditorium Seats"
+            name="Auditorium Seating"
         ))
 
-        # Add Simulated Cinema Screen Wall at y = 0
+        # 3D Cinema Screen Wall
         screen_x = [1, 14, 14, 1, 1]
         screen_y = [0, 0, 0, 0, 0]
         screen_z = [0, 0, 45, 45, 0]
@@ -240,8 +289,8 @@ else:
         fig_3d.add_trace(go.Scatter3d(
             x=screen_x, y=screen_y, z=screen_z,
             mode="lines",
-            line=dict(color="red", width=8),
-            name="Cinema Screen"
+            line=dict(color="#FF4B4B", width=9),
+            name="Cinema Screen Wall"
         ))
 
         fig_3d.update_layout(
@@ -249,9 +298,7 @@ else:
                 xaxis_title="Column (Lateral)",
                 yaxis_title="Distance from Screen (m)",
                 zaxis_title="Neck Tilt Angle (°)",
-                camera=dict(
-                    eye=dict(x=-1.6, y=-1.8, z=1.2)
-                )
+                camera=dict(eye=dict(x=-1.5, y=-1.8, z=1.2))
             ),
             height=580,
             margin=dict(l=10, r=10, t=10, b=10)
@@ -259,32 +306,31 @@ else:
         st.plotly_chart(fig_3d, width="stretch")
 
     with t2:
-        st.subheader("Financial Dead-Zone Recovery Report")
-        
-        # Financial Impact Analytics
-        col_m1, col_m2, col_m3 = st.columns(3)
-        with col_m1:
-            st.metric("Traditional Flat Pricing Model", "₹150.00 / seat", "64% Dead-Zone Vacancy")
-        with col_m2:
-            st.metric("ScreenSense Dynamic Yield", "₹85 - ₹230 / seat", "+18.4% Occupancy Gain")
-        with col_m3:
-            st.metric("Projected Monthly Revenue Lift", "+16.8%", "Recovering Underbooked Rows")
+        st.subheader("Commercial Recovery Analysis")
+
+        m1, m2, m3 = st.columns(3)
+        with m1:
+            st.metric("Traditional Flat Pricing", "₹150 Flat", "64% Unbooked Dead Zone")
+        with m2:
+            st.metric("Dynamic Fair Price Band", "₹95 – ₹260", "+18.4% Occupancy Recovery")
+        with m3:
+            st.metric("Estimated Revenue Lift", "+16.8%", "Turnstile Conversion Rate")
 
         st.markdown("---")
 
         row_report = inference_df.groupby("row").agg(
             Average_Comfort=("vci_score", "mean"),
             Vertical_Strain=("vertical_tilt_deg", "mean"),
-            Optimized_Price=("predicted_price", "mean")
+            Dynamic_Price=("predicted_price", "mean")
         ).reset_index()
 
-        bar_fig = px.bar(
+        fig_bar = px.bar(
             row_report,
             x="row",
-            y="Optimized_Price",
+            y="Dynamic_Price",
             color="Average_Comfort",
             color_continuous_scale="RdYlGn",
-            labels={"row": "Row (Screen Front: A)", "Optimized_Price": "Optimized Price (₹)", "Average_Comfort": "VCI Comfort"},
-            title="Dynamic Pricing Redistribution Across Rows"
+            labels={"row": "Row (A = Front)", "Dynamic_Price": "Optimized Fare (₹)", "Average_Comfort": "Comfort Index"},
+            title="Row-Wise Fare Calibration"
         )
-        st.plotly_chart(bar_fig, width="stretch")
+        st.plotly_chart(fig_bar, width="stretch")
