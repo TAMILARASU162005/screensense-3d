@@ -1,12 +1,12 @@
 """
-ScreenSense 3D - Enterprise Cinema Ergonomics & Dynamic Booking Engine
------------------------------------------------------------------------
+ScreenSense 3D - Coimbatore Multiplex Edition
+---------------------------------------------
 Features:
-- Multiplex & Screen Selection (Standard vs IMAX / EPIQ formats)
-- Dual Portal: Customer Booking vs Multiplex Executive Analytics
-- Real-time Interactive Cart with Dynamic Dynamic Invoicing
-- Instant Digital Boarding Pass with Dynamic QR Code Generation
-- 3D Virtual Auditorium Mesh & Elevation Sightline Diagnostics
+- Coimbatore Theatres Directory with Live Coordinates & Google Maps Pin
+- In-App Cinema Seating & Ergonomic Booking Engine
+- Dynamic Pricing with Visual Comfort Index (VCI)
+- Instant Digital Boarding Pass with Verified QR Code
+- 3D Virtual Auditorium Sightline Mesh
 """
 
 import io
@@ -20,7 +20,7 @@ import qrcode
 import streamlit as st
 
 st.set_page_config(
-    page_title="ScreenSense 3D | Commercial Multiplex Platform",
+    page_title="ScreenSense 3D | Coimbatore Cinemas",
     page_icon="🎬",
     layout="wide"
 )
@@ -48,36 +48,79 @@ def load_trained_pipeline():
 seats_df = load_theater_geometry()
 model, feature_columns = load_trained_pipeline()
 
+# Coimbatore Theatres Database with Real Coordinates
+COIMBATORE_THEATRES = {
+    "KG Cinemas (Race Course)": {
+        "lat": 11.0028,
+        "lon": 76.9740,
+        "address": "Bungalow Road, Race Course, Coimbatore",
+        "screens": ["Screen 1 - 4K Laser Dolby Atmos", "Screen 2 - RGB Laser"],
+        "screen_mult": 1.15
+    },
+    "INOX - Brookefields Mall (Krishnaswamy Rd)": {
+        "lat": 11.0116,
+        "lon": 76.9572,
+        "address": "Brookefields Mall, Krishnaswamy Road, Coimbatore",
+        "screens": ["Audi 1 - INSIGNIA VIP", "Audi 3 - Dolby Atmos"],
+        "screen_mult": 1.25
+    },
+    "Broadway Cinemas - EPIQ (Avinashi Road)": {
+        "lat": 11.0366,
+        "lon": 77.0378,
+        "address": "KMCH Opp, Avinashi Road, Civil Aerodrome, Coimbatore",
+        "screens": ["EPIQ Giant Screen 1", "Gold Screen 2 (Laser 4K)"],
+        "screen_mult": 1.35
+    },
+    "PVR INOX - Prozone Mall (Saravanampatti)": {
+        "lat": 11.0558,
+        "lon": 76.9942,
+        "address": "Prozone Mall, Sathy Road, Saravanampatti, Coimbatore",
+        "screens": ["Audi 2 - 4K Dolby 7.1", "Audi 5 - Large Screen"],
+        "screen_mult": 1.20
+    },
+    "Ganga Yamuna Kaveri Complex (Gandhipuram)": {
+        "lat": 11.0185,
+        "lon": 76.9665,
+        "address": "Cross Cut Road, Gandhipuram, Coimbatore",
+        "screens": ["Ganga Screen (RGB 4K)", "Yamuna Screen"],
+        "screen_mult": 1.05
+    }
+}
+
 if "selected_seats" not in st.session_state:
     st.session_state.selected_seats = []
 
 # --- Sidebar Portal Navigation ---
 st.sidebar.title("🎦 ScreenSense 3D")
+st.sidebar.caption("📍 Coimbatore Multiplex Network")
+
 app_mode = st.sidebar.radio(
-    "Select Platform Mode",
-    ["🎟️ Customer Cinema Booking", "📊 Executive Yield & 3D Analytics"]
+    "Choose View",
+    ["🎟️ Book Tickets (Coimbatore Theatres)", "📊 3D Auditorium & Business Yield"]
 )
 
 st.sidebar.markdown("---")
-st.sidebar.subheader("🏢 Multiplex & Show Telemetry")
+st.sidebar.subheader("📍 Select Theatre")
 
-selected_cinema = st.sidebar.selectbox(
-    "Select Multiplex Chain",
-    ["PVR INOX - Screen 1 (Standard 4K)", "SPI Cinemas - Audi 3 (Dolby Atmos)", "EPIQ Large Format - Screen 2"]
+chosen_theatre_name = st.sidebar.selectbox(
+    "Coimbatore Multiplexes:",
+    list(COIMBATORE_THEATRES.keys())
 )
+theatre_info = COIMBATORE_THEATRES[chosen_theatre_name]
 
-selected_genre = st.sidebar.selectbox("Film Genre", ["Action", "Drama", "Horror", "Comedy", "Sci-Fi"])
-selected_slot = st.sidebar.selectbox("Screening Slot", ["Morning", "Matinee", "Evening", "Night"])
-selected_day = st.sidebar.radio("Day Type", ["Weekday", "Weekend"])
-demand_surcharge = st.sidebar.slider("Peak Demand Multiplier", min_value=0.8, max_value=1.5, value=1.0, step=0.05)
+chosen_screen = st.sidebar.selectbox("Choose Audi / Screen:", theatre_info["screens"])
+selected_genre = st.sidebar.selectbox("Film Genre:", ["Action", "Drama", "Horror", "Comedy", "Sci-Fi"])
+selected_slot = st.sidebar.selectbox("Show Time:", ["Morning (10:30 AM)", "Matinee (02:00 PM)", "Evening (06:30 PM)", "Night (10:00 PM)"])
+selected_day = st.sidebar.radio("Day:", ["Weekday", "Weekend"])
+demand_surcharge = st.sidebar.slider("Dynamic Peak Multiplier:", 0.8, 1.5, 1.0, 0.05)
 
-# Screen format multiplier
-screen_multiplier = 1.25 if "EPIQ" in selected_cinema else (1.10 if "SPI" in selected_cinema else 1.0)
+# Map show slot for ML model
+model_slot = selected_slot.split()[0]
 
-# --- Feature Preparation & Model Inference ---
+# --- ML Inference ---
 inference_df = seats_df.copy()
 inference_df["genre"] = selected_genre
-inference_df["show_slot"] = selected_slot
+inference_df["show_slot"] = model_slot
 inference_df["day_type"] = selected_day
 
 encoded_input = pd.get_dummies(
@@ -91,7 +134,8 @@ for col in feature_columns:
 encoded_input = encoded_input[feature_columns]
 
 predicted_prices = model.predict(encoded_input)
-inference_df["predicted_price"] = np.round(predicted_prices * demand_surcharge * screen_multiplier, 0)
+multiplier_combined = demand_surcharge * theatre_info["screen_mult"]
+inference_df["predicted_price"] = np.round(predicted_prices * multiplier_combined, 0)
 
 
 def assign_tier(vci):
@@ -105,42 +149,59 @@ def assign_tier(vci):
 inference_df["seat_tier"] = inference_df["vci_score"].apply(assign_tier)
 
 
-def generate_qr(ticket_payload: str):
+def generate_qr(payload: str):
     qr = qrcode.QRCode(version=1, box_size=6, border=2)
-    qr.add_data(ticket_payload)
+    qr.add_data(payload)
     qr.make(fit=True)
-    img = qr.make_image(fill_color="#1E1E1E", back_color="white")
+    img = qr.make_image(fill_color="#111111", back_color="white")
     buf = io.BytesIO()
     img.save(buf, format="PNG")
     return buf.getvalue()
 
 
 # ==========================================
-# PORTAL 1: CUSTOMER CINEMA BOOKING
+# VIEW 1: COIMBATORE CINEMAS BOOKING PORTAL
 # ==========================================
-if app_mode == "🎟️ Customer Cinema Booking":
-    st.title(f"🎬 {selected_cinema}")
-    st.caption(f"Transparent Pricing Engine: Dynamic pricing based on screen distance, neck strain, and {selected_genre} visual intensity.")
+if app_mode == "🎟️ Book Tickets (Coimbatore Theatres)":
+    st.title(f"🎬 {chosen_theatre_name}")
+    st.markdown(f"📍 **Address:** {theatre_info['address']} • **Selected Screen:** `{chosen_screen}`")
 
-    k1, k2, k3, k4 = st.columns(4)
-    with k1:
-        st.metric("Genre / Screen", f"{selected_genre}")
-    with k2:
-        st.metric("Timing", f"{selected_slot} • {selected_day}")
-    with k3:
-        front_fare = int(inference_df[inference_df["row"] == "A"]["predicted_price"].mean())
-        st.metric("Front Row Fair Fare", f"₹{front_fare}", delta="-35% Comfort Rebate")
-    with k4:
-        prime_fare = int(inference_df[inference_df["row"] == "F"]["predicted_price"].mean())
-        st.metric("Sweet-Spot Prime Fare", f"₹{prime_fare}", delta="+THX Calibrated")
+    # Theatre Map & Live Navigation Row
+    with st.expander("🗺️ View Theatre on Map & Google Navigation", expanded=True):
+        map_col1, map_col2 = st.columns([3, 1.2])
+
+        with map_col1:
+            map_data = pd.DataFrame([{"lat": theatre_info["lat"], "lon": theatre_info["lon"]}])
+            st.map(map_data, zoom=14, height=220)
+
+        with map_col2:
+            st.markdown("#### 🧭 Live Navigation")
+            gmaps_url = f"https://www.google.com/maps/search/?api=1&query={theatre_info['lat']},{theatre_info['lon']}"
+            st.markdown(f"[![Open In Google Maps](https://img.shields.io/badge/Open_in-Google_Maps-4285F4?style=for-the-badge&logo=google-maps&logoColor=white)]({gmaps_url})")
+            st.caption("Click button to get turn-by-turn driving directions from your location.")
 
     st.markdown("---")
 
-    col_view, col_cart = st.columns([2.4, 1.3])
+    # Live Fare Strip
+    k1, k2, k3, k4 = st.columns(4)
+    with k1:
+        st.metric("Movie Format", f"{selected_genre}")
+    with k2:
+        st.metric("Show Schedule", f"{selected_slot.split()[0]} ({selected_day})")
+    with k3:
+        front_fare = int(inference_df[inference_df["row"] == "A"]["predicted_price"].mean())
+        st.metric("Front Row Fair Fare", f"₹{front_fare}", delta="-35% Neck Comfort Relief")
+    with k4:
+        prime_fare = int(inference_df[inference_df["row"] == "F"]["predicted_price"].mean())
+        st.metric("Sweet-Spot Fare", f"₹{prime_fare}", delta="+THX Calibrated")
+
+    st.markdown("---")
+
+    col_view, col_cart = st.columns([2.4, 1.4])
 
     with col_view:
-        st.subheader("💺 Cinema Screen & Layout")
-        st.info("💡 Screen is at the top. Front row seats (A–B) have reduced fares to compensate for neck tilt. Rows E–G are THX certified prime spots.")
+        st.subheader("💺 Cinema Seating Floor Plan")
+        st.caption("Screen is on top. Front rows (A–B) are dynamically discounted for neck comfort.")
 
         fig_2d = px.scatter(
             inference_df,
@@ -163,8 +224,8 @@ if app_mode == "🎟️ Customer Cinema Booking":
                 "Ergonomic Discounted (Front Rows)": "#EF553B"
             }
         )
-        fig_2d.update_yaxes(autorange="reversed", title="Row (A = Front)")
-        fig_2d.update_xaxes(title="Seat Number", tickmode="linear", dtick=1)
+        fig_2d.update_yaxes(autorange="reversed", title="Row (A = Screen Front)")
+        fig_2d.update_xaxes(title="Seat Column", tickmode="linear", dtick=1)
         fig_2d.update_layout(
             height=460,
             margin=dict(l=10, r=10, t=10, b=10),
@@ -173,14 +234,14 @@ if app_mode == "🎟️ Customer Cinema Booking":
         st.plotly_chart(fig_2d, width="stretch")
 
     with col_cart:
-        st.subheader("🛒 Ticket Selection & Invoice")
+        st.subheader("🛒 In-App Ticket Checkout")
 
         all_seat_list = inference_df["seat_id"].tolist()
         user_picks = st.multiselect(
-            "Pick Seats:",
+            "Select Seats to Book:",
             options=all_seat_list,
             default=st.session_state.selected_seats,
-            placeholder="Select seats (e.g. A4, F6)..."
+            placeholder="Choose seats (e.g. A3, F5, F6)..."
         )
         st.session_state.selected_seats = user_picks
 
@@ -206,61 +267,58 @@ if app_mode == "🎟️ Customer Cinema Booking":
             grand_total = total_fare + convenience_fee
 
             st.write(f"**Base Fares:** ₹{int(total_fare):,}")
-            st.write(f"**Booking Charges:** ₹{int(convenience_fee):,}")
-            st.markdown(f"### **Payable: ₹{int(grand_total):,}**")
+            st.write(f"**Convenience Fee:** ₹{int(convenience_fee):,}")
+            st.markdown(f"### **Total Amount: ₹{int(grand_total):,}**")
 
-            if st.button("🎟️ Complete Payment & Generate Boarding Pass", type="primary", use_container_width=True):
+            if st.button("💳 Confirm Booking & Generate Boarding Pass", type="primary", use_container_width=True):
                 st.session_state.booked_confirmed = True
                 st.balloons()
         else:
-            st.info("Select seats on the theater floor plan to view live ergonomic pricing.")
+            st.info("Pick seats from the floor plan to calculate real-time fares.")
 
-    # --- Live Boarding Pass & QR Pass Modal ---
+    # Live Digital Boarding Pass
     if st.session_state.get("booked_confirmed", False) and user_picks:
         st.markdown("---")
-        st.subheader("🎟️ Official ScreenSense 3D Digital Boarding Pass")
+        st.subheader("🎟️ Confirmed Digital Cinema Pass")
 
-        pass_c1, pass_c2 = st.columns([2, 1])
-
-        with pass_c1:
+        p_col1, p_col2 = st.columns([2, 1])
+        with p_col1:
             st.markdown(f"""
-            ### **{selected_cinema}**
-            * **Movie Experience:** {selected_genre} Film Presentation
-            * **Show Schedule:** {selected_slot} Slot ({selected_day})
-            * **Confirmed Seats:** **{', '.join(user_picks)}**
-            * **Total Paid:** **₹{int(grand_total):,}** (Inclusive of taxes & ergonomics adjustment)
-            * **Auditorium Gate:** Gate 04 • Audi 02
+            ### **{chosen_theatre_name}**
+            * **Auditorium:** {chosen_screen}
+            * **Show Details:** {selected_genre} Presentation • {selected_slot}
+            * **Seats Booked:** **{', '.join(user_picks)}**
+            * **Total Paid:** **₹{int(grand_total):,}** (Dynamic Ergonomics Calibrated)
+            * **Location:** {theatre_info['address']}
             """)
-            st.caption("Valid for single entry. Verified against ScreenSense 3D dynamic seating registry.")
+            st.caption("✅ Confirmed via ScreenSense 3D. Show this QR at the turnstile gate.")
 
-        with pass_c2:
+        with p_col2:
             ticket_payload = (
-                f"SCREENSENSE-3D-PASS|CINEMA={selected_cinema}|SEATS={','.join(user_picks)}|"
-                f"TOTAL=INR_{int(grand_total)}|GENRE={selected_genre}|SLOT={selected_slot}"
+                f"SCREENSENSE-CBE-PASS|THEATRE={chosen_theatre_name}|AUDI={chosen_screen}|"
+                f"SEATS={','.join(user_picks)}|TOTAL=INR_{int(grand_total)}|MAP={theatre_info['lat']},{theatre_info['lon']}"
             )
             qr_bytes = generate_qr(ticket_payload)
-            st.image(qr_bytes, caption="Scan at Cinema Turnstile", width=180)
+            st.image(qr_bytes, caption="Turnstile Scan QR", width=180)
             st.download_button(
-                label="📥 Download Gate Pass QR",
+                label="📥 Download Ticket Pass",
                 data=qr_bytes,
-                file_name="screensense_ticket_pass.png",
+                file_name=f"screensense_ticket_{user_picks[0]}.png",
                 mime="image/png"
             )
 
 
 # ==========================================
-# PORTAL 2: EXECUTIVE YIELD & 3D ANALYTICS
+# VIEW 2: 3D AUDITORIUM & BUSINESS YIELD
 # ==========================================
 else:
-    st.title("📊 ScreenSense 3D: Multiplex Executive Telemetry")
-    st.caption("3D Spatial Geometry Engine, Sightline Coordinates, and Occupancy Yield Modeling.")
+    st.title("📊 Multiplex Executive Telemetry & 3D Optics")
+    st.caption(f"Spatial analytics and dead-zone yield recovery for {chosen_theatre_name}.")
 
-    t1, t2 = st.tabs(["🏛️ 3D Virtual Auditorium Mesh", "📈 Dead-Zone Yield Redistribution"])
+    tab1, tab2 = st.tabs(["🏛️ 3D Virtual Auditorium Mesh", "📈 Commercial Dead-Zone Recovery"])
 
-    with t1:
-        st.subheader("Auditorium Spatial Coordinate Grid")
-        st.caption("Interactive 3D model. Click and drag to rotate the auditorium and view sightline elevation.")
-
+    with tab1:
+        st.subheader("Auditorium Spatial Elevation Model")
         fig_3d = go.Figure()
 
         fig_3d.add_trace(go.Scatter3d(
@@ -272,16 +330,16 @@ else:
                 size=6,
                 color=inference_df["vci_score"],
                 colorscale="Viridis",
-                colorbar=dict(title="VCI Score"),
+                colorbar=dict(title="VCI"),
                 opacity=0.9
             ),
             text=[f"Seat: {sid}<br>Row: {r}<br>Tilt: {t:.1f}°<br>Price: ₹{p:.0f}"
                   for sid, r, t, p in zip(inference_df["seat_id"], inference_df["row"], inference_df["vertical_tilt_deg"], inference_df["predicted_price"])],
             hoverinfo="text",
-            name="Auditorium Seating"
+            name="Seating Grid"
         ))
 
-        # 3D Cinema Screen Wall
+        # Cinema Screen Wall in 3D
         screen_x = [1, 14, 14, 1, 1]
         screen_y = [0, 0, 0, 0, 0]
         screen_z = [0, 0, 45, 45, 0]
@@ -290,14 +348,14 @@ else:
             x=screen_x, y=screen_y, z=screen_z,
             mode="lines",
             line=dict(color="#FF4B4B", width=9),
-            name="Cinema Screen Wall"
+            name="Display Screen"
         ))
 
         fig_3d.update_layout(
             scene=dict(
-                xaxis_title="Column (Lateral)",
+                xaxis_title="Seat Column",
                 yaxis_title="Distance from Screen (m)",
-                zaxis_title="Neck Tilt Angle (°)",
+                zaxis_title="Neck Tilt (°)",
                 camera=dict(eye=dict(x=-1.5, y=-1.8, z=1.2))
             ),
             height=580,
@@ -305,22 +363,10 @@ else:
         )
         st.plotly_chart(fig_3d, width="stretch")
 
-    with t2:
-        st.subheader("Commercial Recovery Analysis")
-
-        m1, m2, m3 = st.columns(3)
-        with m1:
-            st.metric("Traditional Flat Pricing", "₹150 Flat", "64% Unbooked Dead Zone")
-        with m2:
-            st.metric("Dynamic Fair Price Band", "₹95 – ₹260", "+18.4% Occupancy Recovery")
-        with m3:
-            st.metric("Estimated Revenue Lift", "+16.8%", "Turnstile Conversion Rate")
-
-        st.markdown("---")
-
+    with tab2:
+        st.subheader("Row-Wise Pricing Recovery")
         row_report = inference_df.groupby("row").agg(
             Average_Comfort=("vci_score", "mean"),
-            Vertical_Strain=("vertical_tilt_deg", "mean"),
             Dynamic_Price=("predicted_price", "mean")
         ).reset_index()
 
@@ -331,6 +377,6 @@ else:
             color="Average_Comfort",
             color_continuous_scale="RdYlGn",
             labels={"row": "Row (A = Front)", "Dynamic_Price": "Optimized Fare (₹)", "Average_Comfort": "Comfort Index"},
-            title="Row-Wise Fare Calibration"
+            title=f"Optimized Fare Distribution - {chosen_theatre_name}"
         )
         st.plotly_chart(fig_bar, width="stretch")
