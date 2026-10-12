@@ -1,432 +1,642 @@
 """
-ScreenSense 3D - Luxury Coimbatore Cinema Booking Hub
-------------------------------------------------------
-Features:
-- Fixed stateful Booking confirmation & instant Turnstile QR Pass
-- Clean, aligned Luxury Obsidian & Champagne Gold Cinema UI
-- Direct 3D WebGL Cinema Canvas with Interactive Controls
-- Coimbatore Multiplex Directory with live Google Maps routes
+ScreenSense 3D | Next-Gen Multiplex Operating System & BI Platform
+===================================================================
+- Photorealistic 3D Spatial Seating & Audio Immersion Engine (Dolby Atmos)
+- Multiplex F&B Canteen Cart & Smart Parking Reservations
+- Multi-Rail Fintech Checkout (UPI / Cards / Net Banking)
+- Biometric QR Turnstile Boarding Pass with Food Token Integration
+- Executive Management BI Dashboard: SPH (Spend Per Head) & Yield Elasticity
 """
 
 import io
-import os
-import pickle
+import time
 import numpy as np
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 import qrcode
 import streamlit as st
-import streamlit.components.v1 as components
 
-# --- 1. Page Configuration & Custom Luxury Styling ---
 st.set_page_config(
-    page_title="ScreenSense 3D | Luxury Cinema Hub",
+    page_title="ScreenSense 3D | Cinema OS & Analytics",
     page_icon="🎬",
     layout="wide"
 )
 
-# Custom High-End Styling
+# Custom High-End Obsidian & Champagne Gold Theme
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap');
-    
-    html, body, [class*="css"] {
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap');
+
+    .stApp {
+        background: radial-gradient(circle at 50% 0%, #0D1322 0%, #04060A 80%);
         font-family: 'Plus Jakarta Sans', sans-serif;
-    }
-    
-    .main {
-        background-color: #080A10;
         color: #E2E8F0;
     }
-    
-    /* Header Card */
-    .cinema-header-card {
-        background: linear-gradient(135deg, rgba(20, 24, 38, 0.85) 0%, rgba(10, 12, 18, 0.95) 100%);
-        border: 1px solid rgba(212, 175, 55, 0.25);
-        border-radius: 14px;
-        padding: 18px 24px;
+
+    #MainMenu, header, footer {visibility: hidden;}
+
+    .master-ribbon {
+        background: linear-gradient(135deg, rgba(20, 26, 42, 0.95) 0%, rgba(8, 11, 18, 0.98) 100%);
+        border: 1px solid rgba(212, 175, 55, 0.35);
+        border-radius: 16px;
+        padding: 16px 24px;
         margin-bottom: 20px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.7);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
     }
-    
-    .cinema-title {
+    .brand-title {
         font-family: 'Cinzel', serif;
-        color: #F8F5E9;
-        font-size: 26px;
-        margin: 0;
-        letter-spacing: 1px;
-    }
-    
-    .cinema-subtitle {
-        color: #D4AF37;
-        font-size: 13px;
-        letter-spacing: 0.5px;
-        margin-top: 4px;
-    }
-    
-    /* Metrics Pill */
-    div[data-testid="stMetric"] {
-        background: rgba(18, 22, 34, 0.7);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 10px;
-        padding: 12px 16px;
-    }
-    
-    /* Elegant Button */
-    div.stButton > button:first-child {
-        background: linear-gradient(135deg, #D4AF37 0%, #AA820A 100%);
-        color: #0B0E14;
+        font-size: 24px;
         font-weight: 700;
-        border: none;
-        border-radius: 8px;
-        padding: 10px 20px;
-        letter-spacing: 0.5px;
-        transition: all 0.3s ease;
+        background: linear-gradient(90deg, #FFFFFF 0%, #F5D77F 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin: 0;
     }
-    div.stButton > button:first-child:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
-        color: #000;
+
+    .kpi-card {
+        background: rgba(15, 23, 42, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        padding: 16px;
+        text-align: center;
     }
-    
-    /* Ticket Box */
-    .ticket-pass-box {
-        background: radial-gradient(circle at 10% 10%, rgba(30, 35, 55, 0.9) 0%, rgba(14, 17, 26, 0.95) 100%);
-        border: 1px solid rgba(212, 175, 55, 0.4);
+    .kpi-value {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 24px;
+        font-weight: 700;
+        color: #00F59B;
+    }
+    .kpi-label {
+        font-size: 11px;
+        text-transform: uppercase;
+        color: #94A3B8;
+        letter-spacing: 0.8px;
+    }
+
+    .gateway-box {
+        background: rgba(15, 23, 42, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 14px;
-        padding: 22px;
-        margin-top: 15px;
-        box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+        padding: 20px;
+        backdrop-filter: blur(14px);
+    }
+    .invoice-line {
+        display: flex;
+        justify-content: space-between;
+        font-size: 13px;
+        margin-bottom: 7px;
+        color: #94A3B8;
+    }
+    .invoice-line strong { color: #F8FAFC; }
+    .invoice-total-line {
+        border-top: 1px solid rgba(255, 255, 255, 0.15);
+        margin-top: 12px;
+        padding-top: 10px;
+        display: flex;
+        justify-content: space-between;
+        font-size: 20px;
+        font-weight: 700;
+        color: #00F59B;
+        font-family: 'Space Grotesk', sans-serif;
+    }
+
+    .boarding-pass-wrap {
+        background: radial-gradient(circle at 10% 10%, #151D2F 0%, #080C14 100%);
+        border: 1px solid rgba(212, 175, 55, 0.6);
+        border-radius: 18px;
+        padding: 26px;
+        margin-top: 25px;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85);
+    }
+
+    div.stButton > button {
+        background: linear-gradient(135deg, #D4AF37 0%, #AA820A 100%) !important;
+        color: #05070B !important;
+        font-weight: 800 !important;
+        font-size: 14px !important;
+        border: none !important;
+        border-radius: 10px !important;
+        padding: 12px 22px !important;
+        letter-spacing: 0.8px !important;
+        text-transform: uppercase !important;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# --- 2. Load Assets & ML Models ---
-GEOMETRY_CSV = "theater_seats_geometry.csv"
-MODEL_PKL = "pricing_model.pkl"
-
-if not os.path.exists(GEOMETRY_CSV) or not os.path.exists(MODEL_PKL):
-    st.error("Model artifacts missing! Please verify geometry_engine.py & train_model.py have been executed.")
-    st.stop()
-
-
-@st.cache_data
-def load_theater_geometry():
-    return pd.read_csv(GEOMETRY_CSV)
-
-
-@st.cache_resource
-def load_trained_pipeline():
-    with open(MODEL_PKL, "rb") as f:
-        artifacts = pickle.load(f)
-    return artifacts["model"], artifacts["feature_columns"]
-
-
-seats_df = load_theater_geometry()
-model, feature_columns = load_trained_pipeline()
-
-# Coimbatore Multiplex Data
+# ---------------------------------------------------------
+# DIRECTORY & GROUND-TRUTH PRICING
+# ---------------------------------------------------------
 COIMBATORE_THEATRES = {
-    "Broadway Cinemas - EPIQ (Avinashi Road)": {
-        "lat": 11.0366,
-        "lon": 77.0378,
-        "address": "KMCH Opp, Avinashi Road, Civil Aerodrome, Coimbatore",
-        "screens": ["EPIQ Giant Screen 1 (Laser 4K)", "Gold Screen 2 (Dolby Atmos)"],
-        "screen_mult": 1.35
+    "Broadway Cinemas - EPIQ (Avinashi Rd)": {
+        "addr": "Avinashi Road, Civil Aerodrome, Coimbatore",
+        "screens": ["EPIQ Giant Screen 1 (4K Laser)", "Gold Screen 2 (Dolby Atmos)"],
+        "lat": 11.0366, "lon": 77.0378,
+        "pricing": {"front": 130, "standard": 210, "prime": 290},
+        "sound": "Barco 4K Laser + Meyer Sound 64-Ch Atmos"
     },
     "KG Cinemas (Race Course)": {
-        "lat": 11.0028,
-        "lon": 76.9740,
-        "address": "Bungalow Road, Race Course, Coimbatore",
-        "screens": ["Screen 1 - 4K Laser Dolby Atmos", "Screen 2 - RGB Laser"],
-        "screen_mult": 1.15
+        "addr": "Bungalow Road, Race Course, Coimbatore",
+        "screens": ["Screen 1 - 4K Laser Dolby Atmos", "Screen 2 - RGB Laser 7.1"],
+        "lat": 11.0028, "lon": 76.9740,
+        "pricing": {"front": 90, "standard": 150, "prime": 210},
+        "sound": "Dolby Atmos Spatial Cinema Audio"
     },
     "INOX - Brookefields Mall (Krishnaswamy Rd)": {
-        "lat": 11.0116,
-        "lon": 76.9572,
-        "address": "Brookefields Mall, Krishnaswamy Road, Coimbatore",
-        "screens": ["Audi 1 - INSIGNIA VIP", "Audi 3 - Dolby Atmos"],
-        "screen_mult": 1.25
+        "addr": "Brookefields Mall, Krishnaswamy Road, Coimbatore",
+        "screens": ["Audi 1 - INSIGNIA VIP Lux", "Audi 3 - Club Atmos"],
+        "lat": 11.0116, "lon": 76.9572,
+        "pricing": {"front": 120, "standard": 190, "prime": 280},
+        "sound": "INSIGNIA Plush Dolby Atmos"
     },
     "PVR INOX - Prozone Mall (Saravanampatti)": {
-        "lat": 11.0558,
-        "lon": 76.9942,
-        "address": "Prozone Mall, Sathy Road, Saravanampatti, Coimbatore",
-        "screens": ["Audi 2 - 4K Dolby 7.1", "Audi 5 - Large Format"],
-        "screen_mult": 1.20
+        "addr": "Prozone Mall, Sathy Road, Saravanampatti, Coimbatore",
+        "screens": ["Audi 2 - 4K Dolby Atmos", "Audi 5 - Large Format Screen"],
+        "lat": 11.0558, "lon": 76.9942,
+        "pricing": {"front": 110, "standard": 180, "prime": 260},
+        "sound": "Christie 4K Laser + Dolby 7.1 Array"
     },
     "Ganga Yamuna Kaveri Complex (Gandhipuram)": {
-        "lat": 11.0185,
-        "lon": 76.9665,
-        "address": "Cross Cut Road, Gandhipuram, Coimbatore",
-        "screens": ["Ganga Screen (RGB 4K)", "Yamuna Screen"],
-        "screen_mult": 1.05
+        "addr": "Cross Cut Road, Gandhipuram, Coimbatore",
+        "screens": ["Ganga Screen (RGB 4K Laser)", "Yamuna Screen (Dolby Atmos)"],
+        "lat": 11.0185, "lon": 76.9665,
+        "pricing": {"front": 80, "standard": 120, "prime": 160},
+        "sound": "Linear Acoustic Baffles Dual Laser"
     }
 }
 
-# --- 3. Initialize Persistent Session States ---
-if "booked_active" not in st.session_state:
-    st.session_state.booked_active = False
-if "confirmed_seats" not in st.session_state:
-    st.session_state.confirmed_seats = []
-if "confirmed_fare" not in st.session_state:
-    st.session_state.confirmed_fare = 0
+# ---------------------------------------------------------
+# SPATIAL AUDITORIUM GEOMETRY & ACOUSTIC SIMULATION
+# ---------------------------------------------------------
+@st.cache_data
+def load_multiplex_dataset():
+    rows = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
+    cols = 12
+    records = []
+    np.random.seed(42)
 
-# --- 4. Sidebar Configuration Drawer ---
-st.sidebar.markdown("### 🎬 Screenseense 3D Controls")
+    for r_idx, r in enumerate(rows):
+        dist_y = 3.6 + (r_idx * 2.5)
+        elev_z = r_idx * 0.95
+        tilt = np.degrees(np.arctan((6.8 - elev_z) / dist_y))
 
-chosen_theatre_name = st.sidebar.selectbox("Multiplex Destination", list(COIMBATORE_THEATRES.keys()))
-theatre_info = COIMBATORE_THEATRES[chosen_theatre_name]
+        for c in range(1, cols + 1):
+            x_off = (c - (cols / 2 + 0.5)) * 1.5
+            yaw = np.degrees(np.arctan(x_off / dist_y))
+            vci = max(25, min(99, 100 - (abs(tilt - 13.5) * 2.3 + abs(yaw) * 1.6)))
 
-chosen_screen = st.sidebar.selectbox("Auditorium / Screen", theatre_info["screens"])
-selected_genre = st.sidebar.selectbox("Film Genre", ["Action", "Drama", "Horror", "Comedy", "Sci-Fi"])
-selected_slot = st.sidebar.selectbox("Show Schedule", ["Morning (10:30 AM)", "Matinee (02:00 PM)", "Evening (06:30 PM)", "Night (10:00 PM)"])
-selected_day = st.sidebar.radio("Day Type", ["Weekday", "Weekend"], horizontal=True)
-demand_surcharge = st.sidebar.slider("Dynamic Peak Multiplier", 0.8, 1.5, 1.0, 0.05)
+            # Acoustic Telemetry Model (Dolby Atmos Reference Calibration)
+            dist_center = np.sqrt(x_off**2 + (dist_y - 12.0)**2)
+            audio_immersion = max(55, min(99, 100 - (dist_center * 2.8)))
+            spl_db = round(85.0 - (dist_y * 0.45) + (elev_z * 0.3), 1)
 
-st.sidebar.markdown("---")
-show_analytics = st.sidebar.checkbox("Executive Analytics Overlay", value=False)
+            if r in ['A', 'B']:
+                tier = "Ergonomic Discount (Front)"
+                tier_key = "front"
+                base_color = "#FF3366"
+                occupancy_rate = np.random.uniform(0.18, 0.42)
+            elif r in ['E', 'F', 'G']:
+                tier = "Prime Sweet Spot (THX VIP)"
+                tier_key = "prime"
+                base_color = "#00F59B"
+                occupancy_rate = np.random.uniform(0.88, 0.98)
+            else:
+                tier = "Standard Eye-Level"
+                tier_key = "standard"
+                base_color = "#FFB800"
+                occupancy_rate = np.random.uniform(0.60, 0.82)
 
-# Inference Model Calculation
-model_slot = selected_slot.split()[0]
-inference_df = seats_df.copy()
-inference_df["genre"] = selected_genre
-inference_df["show_slot"] = model_slot
-inference_df["day_type"] = selected_day
+            seat_id = f"{r}{c}"
+            status = "Sold Out" if np.random.rand() < occupancy_rate * 0.4 else "Available"
+            if seat_id in ["E5", "E6"]:
+                status = "Available"
 
-encoded_input = pd.get_dummies(
-    inference_df[["pos_y", "vertical_tilt_deg", "fov_horizontal_deg", "yaw_deg", "vci_score", "genre", "show_slot", "day_type"]],
-    drop_first=True
-)
+            records.append({
+                "seat_id": seat_id,
+                "row": r,
+                "col": c,
+                "x": x_off,
+                "y": dist_y,
+                "z": elev_z,
+                "tilt": tilt,
+                "vci": vci,
+                "audio_immersion": audio_immersion,
+                "spl_db": spl_db,
+                "tier": tier,
+                "tier_key": tier_key,
+                "base_color": base_color,
+                "status": status,
+                "historical_fill_rate": round(occupancy_rate * 100, 1)
+            })
 
-for col in feature_columns:
-    if col not in encoded_input.columns:
-        encoded_input[col] = 0
-encoded_input = encoded_input[feature_columns]
+    return pd.DataFrame(records)
 
-predicted_prices = model.predict(encoded_input)
-multiplier_combined = demand_surcharge * theatre_info["screen_mult"]
-inference_df["predicted_price"] = np.round(predicted_prices * multiplier_combined, 0)
+seats_df = load_multiplex_dataset()
+bookable_seats = seats_df[seats_df["status"] != "Sold Out"]["seat_id"].tolist()
 
+# ---------------------------------------------------------
+# STATE INITIALIZATION
+# ---------------------------------------------------------
+if "admin_logged_in" not in st.session_state:
+    st.session_state.admin_logged_in = False
+if "selected_portal" not in st.session_state:
+    st.session_state.selected_portal = "🎟️ Audience Booking Portal"
+if "selected_seats" not in st.session_state:
+    safe_init = [s for s in ["E5", "E6"] if s in bookable_seats] or bookable_seats[:2]
+    st.session_state.selected_seats = safe_init
+if "payment_done" not in st.session_state:
+    st.session_state.payment_done = False
+if "txn_receipt" not in st.session_state:
+    st.session_state.txn_receipt = None
+if "admin_dynamic_surge" not in st.session_state:
+    st.session_state.admin_dynamic_surge = 1.05
+if "global_theatre_name" not in st.session_state:
+    st.session_state.global_theatre_name = "Broadway Cinemas - EPIQ (Avinashi Rd)"
 
-def assign_tier(vci):
-    if vci >= 80:
-        return "Prime Comfort (Sweet Spot)"
-    elif vci >= 55:
-        return "Standard Viewing"
-    else:
-        return "Ergonomic Discounted (Front Rows)"
+# ---------------------------------------------------------
+# SIDEBAR NAVIGATION
+# ---------------------------------------------------------
+with st.sidebar:
+    st.markdown("### 🎦 Multiplex Navigator")
+    sel_theatre_name = st.selectbox(
+        "Select Cinema:",
+        list(COIMBATORE_THEATRES.keys()),
+        index=list(COIMBATORE_THEATRES.keys()).index(st.session_state.global_theatre_name)
+    )
+    st.session_state.global_theatre_name = sel_theatre_name
+    t_meta = COIMBATORE_THEATRES[sel_theatre_name]
+    sel_audi = st.selectbox("Auditorium:", t_meta["screens"])
 
-inference_df["seat_tier"] = inference_df["vci_score"].apply(assign_tier)
+    st.markdown("---")
+    genre = st.radio("Presentation Format:", ["Action (Laser 4K)", "Sci-Fi (Dolby Atmos)", "Drama (IMAX)"], index=0)
+    slot = st.selectbox("Show Time:", ["10:30 AM", "02:15 PM", "06:45 PM", "10:15 PM"], index=2)
+    day = st.radio("Day Type:", ["Weekday", "Weekend / Holiday"], horizontal=True)
 
+# ---------------------------------------------------------
+# GLOBAL PRICING & FARE CALCULATION
+# ---------------------------------------------------------
+active_surge = float(st.session_state.admin_dynamic_surge)
+t_pricing = t_meta["pricing"]
+seats_df["fare"] = seats_df["tier_key"].map(lambda k: round(t_pricing[k] * active_surge, 0))
 
-def generate_qr(payload: str):
-    qr = qrcode.QRCode(version=1, box_size=6, border=2)
-    qr.add_data(payload)
-    qr.make(fit=True)
-    img = qr.make_image(fill_color="#0F172A", back_color="white")
-    buf = io.BytesIO()
-    img.save(buf, format="PNG")
-    return buf.getvalue()
-
-
-# --- 5. Main Hero Banner & Information Strip ---
-st.markdown(f"""
-<div class="cinema-header-card">
-    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+# ---------------------------------------------------------
+# TOP PORTAL SWITCHER RIBBON
+# ---------------------------------------------------------
+ribbon_left, ribbon_right = st.columns([2.5, 1.5])
+with ribbon_left:
+    st.markdown("""
+    <div style="display:flex; align-items:center; gap:12px;">
+        <span style="font-size:28px;">🎬</span>
         <div>
-            <h1 class="cinema-title">{chosen_theatre_name}</h1>
-            <div class="cinema-subtitle">📍 {theatre_info['address']} &nbsp;|&nbsp; 📽️ {chosen_screen}</div>
+            <h1 class="brand-title">SCREENSENSE 3D</h1>
+            <div style="font-size:11px; color:#94A3B8; letter-spacing:1px;">COIMBATORE MULTIPLEX NETWORK & BI SUITE</div>
         </div>
-        <div style="margin-top: 8px;">
-            <a href="https://www.google.com/maps/search/?api=1&query={theatre_info['lat']},{theatre_info['lon']}" target="_blank" style="text-decoration:none;">
-                <button style="background: rgba(212,175,55,0.15); border: 1px solid #D4AF37; color:#F5D77F; padding: 7px 15px; border-radius: 6px; font-weight:600; cursor:pointer;">
-                    📍 Open Google Maps Route
+    </div>
+    """, unsafe_allow_html=True)
+
+with ribbon_right:
+    portal_choice = st.radio(
+        "Interface Mode:",
+        ["🎟️ Audience Booking Portal", "🏢 Theatre Manager Admin (BI)"],
+        horizontal=True,
+        index=0 if st.session_state.selected_portal == "🎟️ Audience Booking Portal" else 1
+    )
+    st.session_state.selected_portal = portal_choice
+
+st.markdown("---")
+
+# =========================================================
+# PORTAL 1: AUDIENCE / CUSTOMER VIEW
+# =========================================================
+if st.session_state.selected_portal == "🎟️ Audience Booking Portal":
+
+    st.markdown(f"""
+    <div class="master-ribbon">
+        <div>
+            <h2 style="font-family:'Cinzel', serif; font-size:20px; color:#FFF; margin:0;">{sel_theatre_name.split(' - ')[0]}</h2>
+            <p style="color:#94A3B8; font-size:12px; margin:3px 0 0 0;">📍 {t_meta['addr']} &nbsp;•&nbsp; 📽️ {sel_audi}</p>
+        </div>
+        <div>
+            <a href="https://www.google.com/maps/search/?api=1&query={t_meta['lat']},{t_meta['lon']}" target="_blank" style="text-decoration:none;">
+                <button style="background:rgba(212,175,55,0.15); border:1px solid #D4AF37; color:#F5D77F; padding:8px 16px; border-radius:8px; font-weight:700; cursor:pointer; font-size:12px;">
+                    🧭 Live Google Maps
                 </button>
             </a>
         </div>
     </div>
-</div>
-""", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
 
-# Top Telemetry Metrics
-k1, k2, k3, k4 = st.columns(4)
-with k1:
-    st.metric("Experience Format", selected_genre)
-with k2:
-    st.metric("Show Schedule", f"{selected_slot.split()[0]} ({selected_day})")
-with k3:
-    front_fare = int(inference_df[inference_df["row"] == "A"]["predicted_price"].mean())
-    st.metric("Front Row Fair Fare", f"₹{front_fare}", delta="-35% Ergonomic Relief")
-with k4:
-    prime_fare = int(inference_df[inference_df["row"] == "F"]["predicted_price"].mean())
-    st.metric("Sweet-Spot Fare", f"₹{prime_fare}", delta="+THX Calibrated")
+    # 3D Visualizer with Audio & Ergonomic Telemetry
+    def render_customer_3d(df, selected_ids):
+        fig = go.Figure()
 
-st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
+        scr_x = np.linspace(-12, 12, 40)
+        scr_z = np.linspace(1.8, 9.2, 20)
+        X, Z = np.meshgrid(scr_x, scr_z)
+        Y = -0.025 * (X**2)
 
-# --- 6. Direct Embedded 3D Canvas ---
-st.markdown("### 🏛️ Interactive 3D Cinema Spatial Experience")
-st.caption("Inspect stage riser slope, screen curvature and sightlines with mouse drag & zoom controls.")
+        fig.add_trace(go.Surface(
+            x=X, y=Y, z=Z,
+            colorscale=[[0, '#8A7332'], [0.25, '#E8D595'], [0.5, '#FFFFFF'], [0.75, '#E8D595'], [1, '#8A7332']],
+            showscale=False, name="Silver Screen", hoverinfo="name"
+        ))
 
-if os.path.exists("index.html"):
-    with open("index.html", "r", encoding="utf-8") as f:
-        html_code = f.read()
-    components.html(html_code, height=720, scrolling=True)
-else:
-    st.info("💡 `index.html` not found in root directory.")
+        for r_idx in range(len(df['row'].unique())):
+            y_start = 3.2 + (r_idx * 2.5)
+            z_height = r_idx * 0.95
+            fig.add_trace(go.Mesh3d(
+                x=[-11, 11, 11, -11, -11, 11, 11, -11],
+                y=[y_start, y_start, y_start + 2.3, y_start + 2.3, y_start, y_start, y_start + 2.3, y_start + 2.3],
+                z=[0, 0, 0, 0, z_height, z_height, z_height, z_height],
+                color="#080C16", opacity=0.6, hoverinfo="skip"
+            ))
 
-st.markdown("---")
+        for sel_id in selected_ids:
+            s_row = df[df["seat_id"] == sel_id]
+            if not s_row.empty:
+                s = s_row.iloc[0]
+                fig.add_trace(go.Scatter3d(
+                    x=[s["x"], 0], y=[s["y"], 0], z=[s["z"] + 0.5, 5.5],
+                    mode="lines", line=dict(color="#D4AF37", width=5, dash="dot"), hoverinfo="skip"
+                ))
 
-# --- 7. Aligned Seating Layout & Persistent Booking Drawer ---
-grid_col, invoice_col = st.columns([2.2, 1.4], gap="medium")
+        colors, sizes, symbols, hover_texts = [], [], [], []
+        for _, s in df.iterrows():
+            is_sel = s["seat_id"] in selected_ids
+            st_val = s["status"]
 
-with grid_col:
-    st.markdown("### 💺 Cinema Seating Floor Plan")
-    st.caption("Top is Screen. Rows A-B are dynamically discounted for neck tilt.")
+            if is_sel:
+                c, sz, sym, badge = "#D4AF37", 12, "circle", "⭐ [SELECTED]"
+            elif st_val == "Sold Out":
+                c, sz, sym, badge = "#2C3440", 6, "x", "❌ [BOOKED]"
+            else:
+                c, sz, sym, badge = s["base_color"], 8, "circle", "🟢 [AVAILABLE]"
 
-    fig_2d = px.scatter(
-        inference_df,
-        x="col",
-        y="row",
-        color="seat_tier",
-        size="vci_score",
-        hover_name="seat_id",
-        hover_data={
-            "predicted_price": ":.0f",
-            "vci_score": ":.1f",
-            "vertical_tilt_deg": ":.1f",
-            "col": False,
-            "row": False,
-            "seat_tier": True
-        },
-        color_discrete_map={
-            "Prime Comfort (Sweet Spot)": "#00CC96",
-            "Standard Viewing": "#FFA15A",
-            "Ergonomic Discounted (Front Rows)": "#EF553B"
-        }
-    )
-    fig_2d.update_yaxes(autorange="reversed", title="")
-    fig_2d.update_xaxes(title="Column Number", tickmode="linear", dtick=1)
-    fig_2d.update_layout(
-        height=420,
-        margin=dict(l=10, r=10, t=10, b=10),
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
-    )
-    st.plotly_chart(fig_2d, width="stretch")
+            colors.append(c)
+            sizes.append(sz)
+            symbols.append(sym)
+            hover_texts.append(
+                f"<b>Seat: {s['seat_id']}</b> | {badge}<br>"
+                f"Fare: ₹{int(s['fare'])}<br>"
+                f"Neck Tilt: {s['tilt']:.1f}°<br>"
+                f"Atmos Immersion: {s['audio_immersion']:.0f}%<br>"
+                f"Sound SPL: {s['spl_db']} dB"
+            )
 
-with invoice_col:
-    st.markdown("### 🛒 In-App Reservation")
+        fig.add_trace(go.Scatter3d(
+            x=df["x"], y=df["y"], z=df["z"] + 0.35,
+            mode="markers+text", text=df["seat_id"],
+            textposition="top center", textfont=dict(color="#CBD5E1", size=8),
+            marker=dict(size=sizes, color=colors, symbol=symbols, opacity=0.96, line=dict(color='#04060A', width=1.2)),
+            hovertext=hover_texts, hoverinfo="text", name="Seats"
+        ))
 
-    all_seats = inference_df["seat_id"].tolist()
-    user_picks = st.multiselect(
-        "Choose Seats:",
-        options=all_seats,
-        default=st.session_state.confirmed_seats if st.session_state.booked_active else [],
-        placeholder="Select seat IDs (e.g., A4, F6)..."
-    )
+        fig.update_layout(
+            scene=dict(
+                aspectmode='manual', aspectratio=dict(x=1.6, y=2.2, z=0.9),
+                xaxis=dict(showgrid=False, zeroline=False, showticklabels=False, title=""),
+                yaxis=dict(showgrid=False, zeroline=False, showticklabels=False, title="Depth"),
+                zaxis=dict(showgrid=False, zeroline=False, showticklabels=False, title="Elevation"),
+                bgcolor="#05070B",
+                camera=dict(eye=dict(x=0.0, y=-1.85, z=1.15), center=dict(x=0, y=0.1, z=-0.2), up=dict(x=0, y=0, z=1))
+            ),
+            updatemenus=[dict(
+                type="buttons", direction="left", x=0.5, y=1.05, xanchor="center", yanchor="bottom",
+                bgcolor="rgba(15, 23, 42, 0.8)", bordercolor="rgba(212, 175, 55, 0.4)", font=dict(color="#F5D77F", size=11),
+                buttons=[
+                    dict(label="🎥 Director 3D", method="relayout", args=[{"scene.camera.eye": dict(x=0.0, y=-1.85, z=1.15), "scene.camera.center": dict(x=0, y=0.1, z=-0.2)}]),
+                    dict(label="📐 Top-Down 2D", method="relayout", args=[{"scene.camera.eye": dict(x=0.0, y=0.01, z=2.4), "scene.camera.center": dict(x=0, y=0.1, z=0)}]),
+                    dict(label="👁️ Front Row POV", method="relayout", args=[{"scene.camera.eye": dict(x=0.0, y=-0.5, z=0.4), "scene.camera.center": dict(x=0, y=0.8, z=0.6)}]),
+                ]
+            )],
+            margin=dict(l=0, r=0, t=35, b=0), height=500, paper_bgcolor="#05070B", showlegend=False
+        )
+        return fig
 
-    if user_picks:
-        selected_records = inference_df[inference_df["seat_id"].isin(user_picks)]
-        subtotal = float(selected_records["predicted_price"].sum())
-        convenience = float(len(user_picks) * 25.0)
-        total_fare = subtotal + convenience
+    st.plotly_chart(render_customer_3d(seats_df, st.session_state.selected_seats), use_container_width=True)
 
-        for _, seat in selected_records.iterrows():
-            st.markdown(f"**Seat {seat['seat_id']}** • ₹{int(seat['predicted_price'])} &nbsp;|&nbsp; Comfort: **{seat['vci_score']:.0f}/100**")
+    # Interactive Inspection HUD for Chosen Seats
+    if st.session_state.selected_seats:
+        hud_df = seats_df[seats_df["seat_id"].isin(st.session_state.selected_seats)]
+        st.markdown("<div style='margin-top:10px;'></div>", unsafe_allow_html=True)
+        hud_cols = st.columns(min(len(hud_df), 4))
+        for idx, (_, s_row) in enumerate(hud_df.head(4).iterrows()):
+            with hud_cols[idx]:
+                st.markdown(f"""
+                <div style="background:rgba(15,23,42,0.8); border:1px solid rgba(255,255,255,0.08); padding:10px 14px; border-radius:10px;">
+                    <div style="font-size:12px; font-weight:700; color:#D4AF37;">Seat {s_row['seat_id']} ({s_row['tier'].split('(')[0]})</div>
+                    <div style="font-size:11px; color:#94A3B8;">Neck Tilt: <b style="color:#FFF;">{s_row['tilt']:.1f}°</b></div>
+                    <div style="font-size:11px; color:#94A3B8;">Dolby Immersion: <b style="color:#00F59B;">{s_row['audio_immersion']:.0f}%</b> • {s_row['spl_db']} dB</div>
+                </div>
+                """, unsafe_allow_html=True)
 
-        st.markdown(f"""
-        <div style="background: rgba(255,255,255,0.03); border-radius: 8px; padding: 12px; margin-top: 10px;">
-            <div style="display:flex; justify-content:space-between;"><span>Ticket Base:</span><span>₹{int(subtotal):,}</span></div>
-            <div style="display:flex; justify-content:space-between;"><span>Booking Fee:</span><span>₹{int(convenience):,}</span></div>
-            <hr style="margin: 8px 0; border-color: rgba(255,255,255,0.1);">
-            <div style="display:flex; justify-content:space-between; font-size: 18px; font-weight:700; color:#D4AF37;">
-                <span>Total Amount:</span><span>₹{int(total_fare):,}</span>
+    st.markdown("---")
+
+    # Seat Selection + Canteen Snacks + Smart Parking
+    col_seat_cart, col_fnb_pay = st.columns([1.6, 1.6], gap="large")
+
+    with col_seat_cart:
+        st.subheader("💺 1. Choose Your Seats")
+        user_picks = st.multiselect("Available Seats:", options=bookable_seats, default=st.session_state.selected_seats)
+        st.session_state.selected_seats = user_picks
+
+        st.markdown("### 🚗 2. Multiplex Smart Parking Slot")
+        parking_opt = st.radio(
+            "Add Reserved Parking Slot?",
+            ["No Parking Needed", "Two-Wheeler Slot (₹30)", "Car Valet Parking (₹80)"],
+            horizontal=True
+        )
+        parking_cost = 80 if "Car" in parking_opt else 30 if "Two" in parking_opt else 0
+
+    with col_fnb_pay:
+        st.subheader("🍿 3. Multiplex Canteen & Snacks Cart")
+        fnb_col1, fnb_col2 = st.columns(2)
+        with fnb_col1:
+            popcorn_qty = st.number_input("Caramel Popcorn Tub (₹190)", min_value=0, max_value=6, value=1)
+            nachos_qty = st.number_input("Peri-Peri Cheese Nachos (₹160)", min_value=0, max_value=6, value=0)
+        with fnb_col2:
+            coffee_qty = st.number_input("Cold Coffee Blast (₹120)", min_value=0, max_value=6, value=1)
+            samosa_qty = st.number_input("Crispy Samosa Trio (₹90)", min_value=0, max_value=6, value=0)
+
+        fnb_total = (popcorn_qty * 190) + (nachos_qty * 160) + (coffee_qty * 120) + (samosa_qty * 90)
+
+        st.markdown("---")
+        st.subheader("💳 4. Real-Time Consolidated Checkout")
+
+        if user_picks:
+            sel_records = seats_df[seats_df["seat_id"].isin(user_picks)]
+            base_seat_amt = float(sel_records["fare"].sum())
+            conv_fee = float(len(user_picks) * 22.0)
+            gst = float(round((base_seat_amt + conv_fee + fnb_total) * 0.18, 2))
+            grand_total = float(round(base_seat_amt + conv_fee + fnb_total + parking_cost + gst, 2))
+
+            st.markdown(f"""
+            <div class="gateway-box">
+                <div class="invoice-line"><span>Seat Tickets ({len(user_picks)}):</span><strong>₹{int(base_seat_amt):,}</strong></div>
+                <div class="invoice-line"><span>Canteen & F&B Items:</span><strong>₹{int(fnb_total):,}</strong></div>
+                <div class="invoice-line"><span>Parking Slot:</span><strong>₹{int(parking_cost):,}</strong></div>
+                <div class="invoice-line"><span>Convenience & GST (18%):</span><strong>₹{gst + conv_fee:.2f}</strong></div>
+                <div class="invoice-total-line"><span>Grand Total:</span><span>₹{int(grand_total):,}</span></div>
             </div>
-        </div>
-        """, unsafe_allow_html=True)
+            """, unsafe_allow_html=True)
 
-        st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
-        
-        # Action Button Triggering State Lock
-        if st.button("💳 Confirm & Generate Boarding Pass", key="btn_confirm_booking", use_container_width=True):
-            st.session_state.booked_active = True
-            st.session_state.confirmed_seats = user_picks
-            st.session_state.confirmed_fare = total_fare
+            pay_rail = st.radio("Select Payment Method:", ["Google Pay", "PhonePe", "Paytm UPI", "Net Banking", "Cards"], horizontal=True)
+
+            if st.button(f"⚡ Pay ₹{int(grand_total):,} via {pay_rail}", key="btn_pay_main"):
+                with st.spinner("Authorizing Secure Fintech Rails..."):
+                    time.sleep(1.0)
+                    st.session_state.payment_done = True
+                    st.session_state.txn_receipt = {
+                        "theatre": sel_theatre_name, "audi": sel_audi, "genre": genre,
+                        "slot": slot, "seats": ", ".join(user_picks), "total": int(grand_total),
+                        "method": pay_rail, "txn_id": f"TXN-CBE-{int(time.time())}",
+                        "fnb_items": f"{popcorn_qty} Popcorn, {coffee_qty} Coffee" if fnb_total > 0 else "None",
+                        "parking": parking_opt.split('(')[0].strip(),
+                        "food_token": f"FNB-{np.random.randint(100, 999)}" if fnb_total > 0 else "NO-FNB",
+                        "lat": t_meta["lat"], "lon": t_meta["lon"]
+                    }
+                    st.balloons()
+                    st.rerun()
+
+    # Digital Boarding Pass Display
+    if st.session_state.payment_done and st.session_state.txn_receipt:
+        rec = st.session_state.txn_receipt
+        st.markdown("<div style='margin-top:20px;'></div>", unsafe_allow_html=True)
+        r_left, r_right = st.columns([2.2, 1.2], gap="large")
+        with r_left:
+            st.markdown(f"""
+            <div class="boarding-pass-wrap">
+                <h3 style="color:#F5D77F; margin:0;">{rec['theatre']}</h3>
+                <p style="color:#94A3B8; font-size:13px; margin:4px 0 12px 0;">Confirmed Seats: <b style="color:#D4AF37;">{rec['seats']}</b> • Fare: <b style="color:#00F59B;">₹{rec['total']}</b> via {rec['method']}</p>
+                <div style="background:rgba(255,255,255,0.04); padding:10px; border-radius:8px; font-size:12px; margin-bottom:8px;">
+                    <div>🍿 <b>Canteen Food Token:</b> <span style="color:#00F59B; font-weight:700;">{rec['food_token']}</span> ({rec['fnb_items']})</div>
+                    <div>🚗 <b>Parking Verification:</b> {rec['parking']}</div>
+                </div>
+                <div style="font-size:11px; color:#64748B;">Turnstile Reference ID: <code>{rec['txn_id']}</code></div>
+            </div>
+            """, unsafe_allow_html=True)
+        with r_right:
+            qr = qrcode.QRCode(version=1, box_size=5, border=2)
+            qr_content = f"TICKET|TXN={rec['txn_id']}|SEATS={rec['seats']}|THEATRE={rec['theatre']}|FNB={rec['food_token']}|PARK={rec['parking']}"
+            qr.add_data(qr_content)
+            qr.make(fit=True)
+            buf = io.BytesIO()
+            qr.make_image().save(buf, format="PNG")
+            st.image(buf.getvalue(), caption="Multiplex Speed-Gate Turnstile Pass", width=170)
+
+# =========================================================
+# PORTAL 2: THEATRE MANAGEMENT & EXECUTIVE ANALYTICS
+# =========================================================
+else:
+    st.subheader("🏢 Theatre Executive Management & Revenue Analytics")
+    st.caption("Access restricted to Multiplex Operations, General Managers & Revenue Analysts.")
+
+    if not st.session_state.admin_logged_in:
+        auth_c1, auth_c2, auth_c3 = st.columns([1, 1.6, 1])
+        with auth_c2:
+            st.markdown("""
+            <div style="background:rgba(15,23,42,0.9); border:1px solid rgba(212,175,55,0.4); border-radius:14px; padding:24px; margin-top:20px;">
+                <h3 style="color:#F5D77F; margin-top:0; font-family:'Cinzel', serif;">Manager Login Gateway</h3>
+                <p style="color:#94A3B8; font-size:13px;">Enter the multiplex admin security passcode to unlock live yield controls and forecasting algorithms.</p>
+            </div>
+            """, unsafe_allow_html=True)
+
+            passcode_in = st.text_input("Enter Passcode:", type="password", placeholder="Default: admin123")
+            if st.button("Unlock Executive Dashboard", key="btn_login_admin"):
+                if passcode_in in ["admin123", "cbe2026", "screensense"]:
+                    st.session_state.admin_logged_in = True
+                    st.success("Authorized! Loading real-time BI telemetry...")
+                    st.rerun()
+                else:
+                    st.error("Invalid Manager Passcode. Please check your credentials.")
+    else:
+        st.sidebar.markdown("### ⚙️ Executive Yield Controls")
+        new_multiplier = st.sidebar.slider(
+            "Live Dynamic Pricing Multiplier:",
+            0.85, 1.45, float(st.session_state.admin_dynamic_surge), 0.05,
+            help="Alters active ticket rates across customer portals in real-time."
+        )
+        st.session_state.admin_dynamic_surge = new_multiplier
+
+        if st.sidebar.button("🔒 Logout Manager Session"):
+            st.session_state.admin_logged_in = False
             st.rerun()
 
-    else:
-        st.session_state.booked_active = False
-        st.info("Pick seats from the grid to view dynamic fares and confirm booking.")
+        # Advanced Multiplex KPIs (Including SPH - Spend Per Head)
+        sold_cnt = len(seats_df[seats_df["status"] == "Sold Out"])
+        occ_ratio = (sold_cnt / len(seats_df)) * 100
+        gross_ticket_yield = seats_df[seats_df["status"] == "Sold Out"]["fare"].sum()
+        estimated_fnb_rev = sold_cnt * 140  # Industry average ₹140 per head
+        sph_metric = (gross_ticket_yield + estimated_fnb_rev) / max(1, sold_cnt)
 
-# --- 8. Persistent Verified QR Boarding Pass ---
-if st.session_state.booked_active and st.session_state.confirmed_seats:
-    st.markdown("<div style='margin-top: 25px;'></div>", unsafe_allow_html=True)
-    st.balloons()
-    
-    st.markdown("### 🎟️ Official Turnstile Boarding Pass")
+        k1, k2, k3, k4 = st.columns(4)
+        with k1:
+            st.markdown(f"""<div class="kpi-card"><div class="kpi-value">{occ_ratio:.1f}%</div><div class="kpi-label">Auditorium Occupancy</div></div>""", unsafe_allow_html=True)
+        with k2:
+            st.markdown(f"""<div class="kpi-card"><div class="kpi-value">₹{int(gross_ticket_yield):,}</div><div class="kpi-label">Realized Box Office</div></div>""", unsafe_allow_html=True)
+        with k3:
+            st.markdown(f"""<div class="kpi-card"><div class="kpi-value">₹{int(estimated_fnb_rev):,}</div><div class="kpi-label">F&B Canteen Concession Yield</div></div>""", unsafe_allow_html=True)
+        with k4:
+            st.markdown(f"""<div class="kpi-card"><div class="kpi-value">₹{int(sph_metric):,}</div><div class="kpi-label">SPH (Spend Per Head Metric)</div></div>""", unsafe_allow_html=True)
 
-    pass_col1, pass_col2 = st.columns([2.3, 1.2])
+        st.markdown("<div style='margin-top:25px;'></div>", unsafe_allow_html=True)
 
-    with pass_col1:
-        st.markdown(f"""
-        <div class="ticket-pass-box">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h2 style="font-family:'Cinzel', serif; margin:0; color:#F5D77F;">{chosen_theatre_name}</h2>
-                <span style="background:rgba(0,204,150,0.2); color:#00CC96; padding: 4px 10px; border-radius: 6px; font-weight:700; font-size:12px;">CONFIRMED</span>
-            </div>
-            <div style="margin: 12px 0; color:#94A3B8; font-size:14px;">
-                Auditorium: <strong style="color:#FFF;">{chosen_screen}</strong> &nbsp;•&nbsp; 
-                Format: <strong style="color:#FFF;">{selected_genre}</strong> &nbsp;•&nbsp; 
-                Time: <strong style="color:#FFF;">{selected_slot}</strong>
-            </div>
-            <div style="font-size: 20px; font-weight: 700; color: #FFF; margin: 10px 0;">
-                Confirmed Seats: <span style="color:#D4AF37;">{', '.join(st.session_state.confirmed_seats)}</span>
-            </div>
-            <div style="color: #94A3B8; font-size: 13px;">
-                Total Billed: <strong style="color:#FFF;">₹{int(st.session_state.confirmed_fare):,}</strong> (Dynamic SMPTE Ergonomic Pricing Calibrated)
-            </div>
-            <div style="margin-top: 15px; font-size: 12px; color: #64748B;">
-                📍 {theatre_info['address']}<br>
-                Please present the digital QR code at the turnstile gate for verified entry.
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+        an_col1, an_col2 = st.columns(2)
 
-    with pass_col2:
-        qr_string = (
-            f"SCREENSENSE-CBE-PASS|THEATRE={chosen_theatre_name}|AUDI={chosen_screen}|"
-            f"SEATS={','.join(st.session_state.confirmed_seats)}|TOTAL=INR_{int(st.session_state.confirmed_fare)}|"
-            f"MAP_LATLON={theatre_info['lat']},{theatre_info['lon']}"
+        with an_col1:
+            st.markdown("#### 🗺️ Spatial Seating Occupancy Density (Heatmap)")
+            st.caption("Identifies high-traffic acoustic sweet spots vs underperforming front rows.")
+            heat_pivot = seats_df.pivot(index="row", columns="col", values="historical_fill_rate")
+            fig_h = px.imshow(
+                heat_pivot,
+                labels=dict(x="Column", y="Row", color="Fill %"),
+                x=[str(i) for i in range(1, 13)],
+                y=['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'],
+                color_continuous_scale="Viridis"
+            )
+            fig_h.update_layout(
+                height=350, margin=dict(l=10, r=10, t=10, b=10),
+                paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font=dict(color="#E2E8F0")
+            )
+            st.plotly_chart(fig_h, use_container_width=True)
+
+        with an_col2:
+            st.markdown("#### 🍿 Revenue Contribution Share (Tickets vs F&B Concessions)")
+            st.caption("Commercial multiplex profitability breakdown.")
+            rev_share_fig = go.Figure(data=[go.Pie(
+                labels=['Box Office Tickets', 'F&B Popcorn/Snacks', 'Convenience Fee', 'Parking Slots'],
+                values=[gross_ticket_yield, estimated_fnb_rev, sold_cnt * 22, sold_cnt * 35],
+                hole=.45,
+                marker=dict(colors=['#00F59B', '#D4AF37', '#00E5FF', '#FFB800'])
+            )])
+            rev_share_fig.update_layout(
+                height=350, margin=dict(l=10, r=10, t=10, b=10),
+                paper_bgcolor="rgba(0,0,0,0)", font=dict(color="#E2E8F0")
+            )
+            st.plotly_chart(rev_share_fig, use_container_width=True)
+
+        st.markdown("---")
+
+        st.markdown("#### 🔮 14-Day Observed Box Office & 3-Day Predictive Forecast")
+        dates_arr = pd.date_range(end=pd.Timestamp.now(), periods=14).strftime("%b %d")
+        hist_rev = [42000, 48000, 39000, 52000, 78000, 96000, 91000, 44000, 47000, 41000, 58000, 89000, 104000, 98000]
+
+        x_vals = np.arange(len(hist_rev))
+        m, b = np.polyfit(x_vals, hist_rev, 1)
+        future_proj = [m * (len(hist_rev) + i) + b for i in range(3)]
+        proj_lbls = [f"Day +{i+1}" for i in range(3)]
+
+        fig_p = go.Figure()
+        fig_p.add_trace(go.Scatter(x=list(dates_arr), y=hist_rev, mode="lines+markers", name="Observed Box Office (₹)", line=dict(color="#00F59B", width=3)))
+        fig_p.add_trace(go.Scatter(x=proj_lbls, y=future_proj, mode="lines+markers", name="ML Forecast (₹)", line=dict(color="#FFB800", width=3, dash="dash")))
+        fig_p.update_layout(
+            height=320, margin=dict(l=10, r=10, t=10, b=10),
+            paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+            yaxis_title="Revenue (₹)", font=dict(color="#E2E8F0"), legend=dict(orientation="h", y=1.1)
         )
-        qr_image_bytes = generate_qr(qr_string)
-        
-        st.markdown("<div style='text-align:center; padding-top: 10px;'>", unsafe_allow_html=True)
-        st.image(qr_image_bytes, caption="Turnstile QR Verification", width=180)
-        st.download_button(
-            label="📥 Download Pass PNG",
-            data=qr_image_bytes,
-            file_name=f"screensense_boarding_pass_{st.session_state.confirmed_seats[0]}.png",
-            mime="image/png",
-            use_container_width=True
-        )
-        st.markdown("</div>", unsafe_allow_html=True)
-
-# --- 9. Executive Yield Analytics (Optional Drawer) ---
-if show_analytics:
-    st.markdown("---")
-    st.subheader("📈 Executive Dead-Zone Recovery Breakdown")
-    row_report = inference_df.groupby("row").agg(
-        Average_Comfort=("vci_score", "mean"),
-        Dynamic_Price=("predicted_price", "mean")
-    ).reset_index()
-
-    fig_bar = px.bar(
-        row_report,
-        x="row",
-        y="Dynamic_Price",
-        color="Average_Comfort",
-        color_continuous_scale="RdYlGn",
-        labels={"row": "Row (A = Front)", "Dynamic_Price": "Optimized Fare (₹)", "Average_Comfort": "Comfort Index"},
-        title=f"Optimized Fare Distribution Across Rows - {chosen_theatre_name}"
-    )
-    st.plotly_chart(fig_bar, width="stretch")
+        st.plotly_chart(fig_p, use_container_width=True)
