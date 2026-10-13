@@ -1,11 +1,9 @@
 """
-ScreenSense 3D | Next-Gen Multiplex Operating System & BI Platform
-===================================================================
-- Photorealistic 3D Spatial Seating & Audio Immersion Engine (Dolby Atmos)
-- Multiplex F&B Canteen Cart & Smart Parking Reservations
-- Multi-Rail Fintech Checkout (UPI / Cards / Net Banking)
-- Biometric QR Turnstile Boarding Pass with Food Token Integration
-- Executive Management BI Dashboard: SPH (Spend Per Head) & Yield Elasticity
+ScreenSense 3D | Triple-Portal Cinema OS & Analytics Platform
+=============================================================
+1. Audience Portal: 3D Seating, Atmos Audio Spectrum, F&B Delivery & Checkout
+2. Executive Analytics Portal: Real-time SPH, Heatmaps & Yield Simulator
+3. Turnstile Security Scanner: Entry Gate Staff Biometric Verification
 """
 
 import io
@@ -18,31 +16,31 @@ import qrcode
 import streamlit as st
 
 st.set_page_config(
-    page_title="ScreenSense 3D | Cinema OS & Analytics",
+    page_title="ScreenSense 3D | Cinema OS",
     page_icon="🎬",
     layout="wide"
 )
 
-# Custom High-End Obsidian & Champagne Gold Theme
+# Custom High-Voltage Cyber-Cinema Styling
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@600;700;800&display=swap');
 
     .stApp {
-        background: radial-gradient(circle at 50% 0%, #0D1322 0%, #04060A 80%);
+        background: radial-gradient(circle at 50% 0%, #0B1528 0%, #030712 70%, #010307 100%);
         font-family: 'Plus Jakarta Sans', sans-serif;
-        color: #E2E8F0;
+        color: #F1F5F9;
     }
 
     #MainMenu, header, footer {visibility: hidden;}
 
     .master-ribbon {
-        background: linear-gradient(135deg, rgba(20, 26, 42, 0.95) 0%, rgba(8, 11, 18, 0.98) 100%);
-        border: 1px solid rgba(212, 175, 55, 0.35);
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(3, 7, 18, 0.98) 100%);
+        border: 1px solid rgba(6, 182, 212, 0.45);
         border-radius: 16px;
-        padding: 16px 24px;
+        padding: 16px 26px;
         margin-bottom: 20px;
-        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.7);
+        box-shadow: 0 0 35px rgba(6, 182, 212, 0.15), 0 20px 40px rgba(0, 0, 0, 0.85);
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -51,46 +49,58 @@ st.markdown("""
     }
     .brand-title {
         font-family: 'Cinzel', serif;
-        font-size: 24px;
-        font-weight: 700;
-        background: linear-gradient(90deg, #FFFFFF 0%, #F5D77F 100%);
+        font-size: 28px;
+        font-weight: 800;
+        background: linear-gradient(90deg, #FFFFFF 0%, #06B6D4 50%, #FACC15 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         margin: 0;
+        letter-spacing: 1.5px;
+    }
+
+    .glass-card {
+        background: rgba(15, 23, 42, 0.82);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 14px;
+        padding: 18px;
+        backdrop-filter: blur(18px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
     }
 
     .kpi-card {
-        background: rgba(15, 23, 42, 0.85);
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(15, 23, 42, 0.9);
+        border: 1px solid rgba(16, 185, 129, 0.35);
         border-radius: 12px;
         padding: 16px;
         text-align: center;
+        box-shadow: 0 0 20px rgba(16, 185, 129, 0.12);
     }
     .kpi-value {
         font-family: 'Space Grotesk', sans-serif;
-        font-size: 24px;
-        font-weight: 700;
-        color: #00F59B;
+        font-size: 26px;
+        font-weight: 800;
+        color: #10B981;
     }
     .kpi-label {
         font-size: 11px;
         text-transform: uppercase;
         color: #94A3B8;
-        letter-spacing: 0.8px;
+        letter-spacing: 0.9px;
     }
 
     .gateway-box {
-        background: rgba(15, 23, 42, 0.85);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(11, 18, 32, 0.95);
+        border: 1px solid rgba(250, 204, 21, 0.4);
         border-radius: 14px;
-        padding: 20px;
-        backdrop-filter: blur(14px);
+        padding: 22px;
+        backdrop-filter: blur(16px);
+        box-shadow: 0 0 30px rgba(250, 204, 21, 0.1);
     }
     .invoice-line {
         display: flex;
         justify-content: space-between;
         font-size: 13px;
-        margin-bottom: 7px;
+        margin-bottom: 8px;
         color: #94A3B8;
     }
     .invoice-line strong { color: #F8FAFC; }
@@ -100,31 +110,36 @@ st.markdown("""
         padding-top: 10px;
         display: flex;
         justify-content: space-between;
-        font-size: 20px;
-        font-weight: 700;
-        color: #00F59B;
+        font-size: 22px;
+        font-weight: 800;
+        color: #FACC15;
         font-family: 'Space Grotesk', sans-serif;
     }
 
     .boarding-pass-wrap {
-        background: radial-gradient(circle at 10% 10%, #151D2F 0%, #080C14 100%);
-        border: 1px solid rgba(212, 175, 55, 0.6);
+        background: radial-gradient(circle at 10% 10%, #0F172A 0%, #020617 100%);
+        border: 1px solid rgba(6, 182, 212, 0.6);
         border-radius: 18px;
         padding: 26px;
         margin-top: 25px;
-        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85);
+        box-shadow: 0 0 40px rgba(6, 182, 212, 0.2), 0 25px 60px rgba(0, 0, 0, 0.95);
     }
 
     div.stButton > button {
-        background: linear-gradient(135deg, #D4AF37 0%, #AA820A 100%) !important;
-        color: #05070B !important;
+        background: linear-gradient(135deg, #FACC15 0%, #F59E0B 100%) !important;
+        color: #030712 !important;
         font-weight: 800 !important;
         font-size: 14px !important;
         border: none !important;
         border-radius: 10px !important;
-        padding: 12px 22px !important;
-        letter-spacing: 0.8px !important;
+        padding: 13px 24px !important;
+        letter-spacing: 0.9px !important;
         text-transform: uppercase !important;
+        box-shadow: 0 6px 25px rgba(250, 204, 21, 0.35) !important;
+    }
+    div.stButton > button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 35px rgba(250, 204, 21, 0.55) !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -178,7 +193,6 @@ def load_multiplex_dataset():
     rows = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
     cols = 12
     records = []
-    np.random.seed(42)
 
     for r_idx, r in enumerate(rows):
         dist_y = 3.6 + (r_idx * 2.5)
@@ -190,7 +204,9 @@ def load_multiplex_dataset():
             yaw = np.degrees(np.arctan(x_off / dist_y))
             vci = max(25, min(99, 100 - (abs(tilt - 13.5) * 2.3 + abs(yaw) * 1.6)))
 
-            # Acoustic Telemetry Model (Dolby Atmos Reference Calibration)
+            screen_span = 24.0
+            fov_deg = np.degrees(2 * np.arctan((screen_span / 2) / dist_y))
+
             dist_center = np.sqrt(x_off**2 + (dist_y - 12.0)**2)
             audio_immersion = max(55, min(99, 100 - (dist_center * 2.8)))
             spl_db = round(85.0 - (dist_y * 0.45) + (elev_z * 0.3), 1)
@@ -198,26 +214,21 @@ def load_multiplex_dataset():
             if r in ['A', 'B']:
                 tier = "Ergonomic Discount (Front)"
                 tier_key = "front"
-                base_color = "#FF3366"
-                occupancy_rate = np.random.uniform(0.18, 0.42)
+                base_color = "#F43F5E"
+                fill_rate = 32.5
             elif r in ['E', 'F', 'G']:
                 tier = "Prime Sweet Spot (THX VIP)"
                 tier_key = "prime"
-                base_color = "#00F59B"
-                occupancy_rate = np.random.uniform(0.88, 0.98)
+                base_color = "#10B981"
+                fill_rate = 94.0
             else:
                 tier = "Standard Eye-Level"
                 tier_key = "standard"
-                base_color = "#FFB800"
-                occupancy_rate = np.random.uniform(0.60, 0.82)
-
-            seat_id = f"{r}{c}"
-            status = "Sold Out" if np.random.rand() < occupancy_rate * 0.4 else "Available"
-            if seat_id in ["E5", "E6"]:
-                status = "Available"
+                base_color = "#06B6D4"
+                fill_rate = 74.5
 
             records.append({
-                "seat_id": seat_id,
+                "seat_id": f"{r}{c}",
                 "row": r,
                 "col": c,
                 "x": x_off,
@@ -225,19 +236,19 @@ def load_multiplex_dataset():
                 "z": elev_z,
                 "tilt": tilt,
                 "vci": vci,
+                "fov_deg": round(fov_deg, 1),
                 "audio_immersion": audio_immersion,
                 "spl_db": spl_db,
                 "tier": tier,
                 "tier_key": tier_key,
                 "base_color": base_color,
-                "status": status,
-                "historical_fill_rate": round(occupancy_rate * 100, 1)
+                "historical_fill_rate": fill_rate
             })
 
     return pd.DataFrame(records)
 
 seats_df = load_multiplex_dataset()
-bookable_seats = seats_df[seats_df["status"] != "Sold Out"]["seat_id"].tolist()
+all_seat_ids = seats_df["seat_id"].tolist()
 
 # ---------------------------------------------------------
 # STATE INITIALIZATION
@@ -247,8 +258,7 @@ if "admin_logged_in" not in st.session_state:
 if "selected_portal" not in st.session_state:
     st.session_state.selected_portal = "🎟️ Audience Booking Portal"
 if "selected_seats" not in st.session_state:
-    safe_init = [s for s in ["E5", "E6"] if s in bookable_seats] or bookable_seats[:2]
-    st.session_state.selected_seats = safe_init
+    st.session_state.selected_seats = ["E5", "E6"]
 if "payment_done" not in st.session_state:
     st.session_state.payment_done = False
 if "txn_receipt" not in st.session_state:
@@ -259,7 +269,7 @@ if "global_theatre_name" not in st.session_state:
     st.session_state.global_theatre_name = "Broadway Cinemas - EPIQ (Avinashi Rd)"
 
 # ---------------------------------------------------------
-# SIDEBAR NAVIGATION
+# SIDEBAR NAVIGATION & CLIMATE ENGINE
 # ---------------------------------------------------------
 with st.sidebar:
     st.markdown("### 🎦 Multiplex Navigator")
@@ -277,34 +287,40 @@ with st.sidebar:
     slot = st.selectbox("Show Time:", ["10:30 AM", "02:15 PM", "06:45 PM", "10:15 PM"], index=2)
     day = st.radio("Day Type:", ["Weekday", "Weekend / Holiday"], horizontal=True)
 
-# ---------------------------------------------------------
-# GLOBAL PRICING & FARE CALCULATION
-# ---------------------------------------------------------
-active_surge = float(st.session_state.admin_dynamic_surge)
+    st.markdown("---")
+    st.markdown("### 🌦️ Coimbatore Weather Engine")
+    weather_cond = st.selectbox(
+        "Climate Conditions:",
+        ["Sunny / Clear Evening (Normal Footfall)", "Heavy Monsoon Rain (+12% Rush)", "Festival Long Weekend (+25% Surge)"]
+    )
+    weather_multiplier = 1.25 if "Festival" in weather_cond else 1.12 if "Rain" in weather_cond else 1.0
+
+# Dynamic Global Price Sync
+effective_surge = float(st.session_state.admin_dynamic_surge) * weather_multiplier
 t_pricing = t_meta["pricing"]
-seats_df["fare"] = seats_df["tier_key"].map(lambda k: round(t_pricing[k] * active_surge, 0))
+seats_df["fare"] = seats_df["tier_key"].map(lambda k: round(t_pricing[k] * effective_surge, 0))
 
 # ---------------------------------------------------------
-# TOP PORTAL SWITCHER RIBBON
+# TOP PORTAL SWITCHER RIBBON (3 PORTALS)
 # ---------------------------------------------------------
-ribbon_left, ribbon_right = st.columns([2.5, 1.5])
+ribbon_left, ribbon_right = st.columns([2.2, 1.8])
 with ribbon_left:
     st.markdown("""
     <div style="display:flex; align-items:center; gap:12px;">
-        <span style="font-size:28px;">🎬</span>
+        <span style="font-size:32px;">🎬</span>
         <div>
             <h1 class="brand-title">SCREENSENSE 3D</h1>
-            <div style="font-size:11px; color:#94A3B8; letter-spacing:1px;">COIMBATORE MULTIPLEX NETWORK & BI SUITE</div>
+            <div style="font-size:11px; color:#94A3B8; letter-spacing:1.5px; font-weight:600;">COIMBATORE CINEMA OPERATING SYSTEM & BI SUITE</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
 with ribbon_right:
     portal_choice = st.radio(
-        "Interface Mode:",
-        ["🎟️ Audience Booking Portal", "🏢 Theatre Manager Admin (BI)"],
+        "Platform Gateways:",
+        ["🎟️ Audience Booking Portal", "🏢 Theatre Manager Admin (BI)", "🛡️ Turnstile Gate Scanner"],
         horizontal=True,
-        index=0 if st.session_state.selected_portal == "🎟️ Audience Booking Portal" else 1
+        index=["🎟️ Audience Booking Portal", "🏢 Theatre Manager Admin (BI)", "🛡️ Turnstile Gate Scanner"].index(st.session_state.selected_portal)
     )
     st.session_state.selected_portal = portal_choice
 
@@ -318,20 +334,22 @@ if st.session_state.selected_portal == "🎟️ Audience Booking Portal":
     st.markdown(f"""
     <div class="master-ribbon">
         <div>
-            <h2 style="font-family:'Cinzel', serif; font-size:20px; color:#FFF; margin:0;">{sel_theatre_name.split(' - ')[0]}</h2>
+            <h2 style="font-family:'Cinzel', serif; font-size:22px; color:#FFF; margin:0;">{sel_theatre_name.split(' - ')[0]}</h2>
             <p style="color:#94A3B8; font-size:12px; margin:3px 0 0 0;">📍 {t_meta['addr']} &nbsp;•&nbsp; 📽️ {sel_audi}</p>
         </div>
-        <div>
+        <div style="display:flex; align-items:center; gap:12px;">
+            <span style="font-size:12px; color:#06B6D4; background:rgba(6,182,212,0.12); padding:6px 14px; border-radius:12px; border:1px solid rgba(6,182,212,0.35); font-weight:700;">
+                🌦️ Footfall Factor: {weather_multiplier:.2f}x
+            </span>
             <a href="https://www.google.com/maps/search/?api=1&query={t_meta['lat']},{t_meta['lon']}" target="_blank" style="text-decoration:none;">
-                <button style="background:rgba(212,175,55,0.15); border:1px solid #D4AF37; color:#F5D77F; padding:8px 16px; border-radius:8px; font-weight:700; cursor:pointer; font-size:12px;">
-                    🧭 Live Google Maps
+                <button style="background:rgba(250,204,21,0.15); border:1px solid #FACC15; color:#FACC15; padding:8px 16px; border-radius:8px; font-weight:800; cursor:pointer; font-size:12px;">
+                    🧭 Live Maps
                 </button>
             </a>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-    # 3D Visualizer with Audio & Ergonomic Telemetry
     def render_customer_3d(df, selected_ids):
         fig = go.Figure()
 
@@ -342,7 +360,7 @@ if st.session_state.selected_portal == "🎟️ Audience Booking Portal":
 
         fig.add_trace(go.Surface(
             x=X, y=Y, z=Z,
-            colorscale=[[0, '#8A7332'], [0.25, '#E8D595'], [0.5, '#FFFFFF'], [0.75, '#E8D595'], [1, '#8A7332']],
+            colorscale=[[0, '#06B6D4'], [0.3, '#10B981'], [0.5, '#FFFFFF'], [0.7, '#10B981'], [1, '#06B6D4']],
             showscale=False, name="Silver Screen", hoverinfo="name"
         ))
 
@@ -353,7 +371,7 @@ if st.session_state.selected_portal == "🎟️ Audience Booking Portal":
                 x=[-11, 11, 11, -11, -11, 11, 11, -11],
                 y=[y_start, y_start, y_start + 2.3, y_start + 2.3, y_start, y_start, y_start + 2.3, y_start + 2.3],
                 z=[0, 0, 0, 0, z_height, z_height, z_height, z_height],
-                color="#080C16", opacity=0.6, hoverinfo="skip"
+                color="#0A1120", opacity=0.85, hoverinfo="skip"
             ))
 
         for sel_id in selected_ids:
@@ -362,37 +380,33 @@ if st.session_state.selected_portal == "🎟️ Audience Booking Portal":
                 s = s_row.iloc[0]
                 fig.add_trace(go.Scatter3d(
                     x=[s["x"], 0], y=[s["y"], 0], z=[s["z"] + 0.5, 5.5],
-                    mode="lines", line=dict(color="#D4AF37", width=5, dash="dot"), hoverinfo="skip"
+                    mode="lines", line=dict(color="#FACC15", width=6, dash="solid"), hoverinfo="skip"
                 ))
 
         colors, sizes, symbols, hover_texts = [], [], [], []
         for _, s in df.iterrows():
             is_sel = s["seat_id"] in selected_ids
-            st_val = s["status"]
-
-            if is_sel:
-                c, sz, sym, badge = "#D4AF37", 12, "circle", "⭐ [SELECTED]"
-            elif st_val == "Sold Out":
-                c, sz, sym, badge = "#2C3440", 6, "x", "❌ [BOOKED]"
-            else:
-                c, sz, sym, badge = s["base_color"], 8, "circle", "🟢 [AVAILABLE]"
+            c = "#FACC15" if is_sel else s["base_color"]
+            sz = 14 if is_sel else 9
+            badge = "⭐ [SELECTED]" if is_sel else "🟢 [INSPECT & BOOK]"
 
             colors.append(c)
             sizes.append(sz)
-            symbols.append(sym)
+            symbols.append("circle")
             hover_texts.append(
                 f"<b>Seat: {s['seat_id']}</b> | {badge}<br>"
+                f"Tier: {s['tier']}<br>"
                 f"Fare: ₹{int(s['fare'])}<br>"
+                f"Optical FOV: {s['fov_deg']}°<br>"
                 f"Neck Tilt: {s['tilt']:.1f}°<br>"
-                f"Atmos Immersion: {s['audio_immersion']:.0f}%<br>"
-                f"Sound SPL: {s['spl_db']} dB"
+                f"Dolby Immersion: {s['audio_immersion']:.0f}%"
             )
 
         fig.add_trace(go.Scatter3d(
             x=df["x"], y=df["y"], z=df["z"] + 0.35,
             mode="markers+text", text=df["seat_id"],
-            textposition="top center", textfont=dict(color="#CBD5E1", size=8),
-            marker=dict(size=sizes, color=colors, symbol=symbols, opacity=0.96, line=dict(color='#04060A', width=1.2)),
+            textposition="top center", textfont=dict(color="#E2E8F0", size=9),
+            marker=dict(size=sizes, color=colors, symbol=symbols, opacity=0.98, line=dict(color='#030712', width=1.5)),
             hovertext=hover_texts, hoverinfo="text", name="Seats"
         ))
 
@@ -402,59 +416,92 @@ if st.session_state.selected_portal == "🎟️ Audience Booking Portal":
                 xaxis=dict(showgrid=False, zeroline=False, showticklabels=False, title=""),
                 yaxis=dict(showgrid=False, zeroline=False, showticklabels=False, title="Depth"),
                 zaxis=dict(showgrid=False, zeroline=False, showticklabels=False, title="Elevation"),
-                bgcolor="#05070B",
+                bgcolor="#030712",
                 camera=dict(eye=dict(x=0.0, y=-1.85, z=1.15), center=dict(x=0, y=0.1, z=-0.2), up=dict(x=0, y=0, z=1))
             ),
             updatemenus=[dict(
                 type="buttons", direction="left", x=0.5, y=1.05, xanchor="center", yanchor="bottom",
-                bgcolor="rgba(15, 23, 42, 0.8)", bordercolor="rgba(212, 175, 55, 0.4)", font=dict(color="#F5D77F", size=11),
+                bgcolor="rgba(15, 23, 42, 0.9)", bordercolor="rgba(6, 182, 212, 0.45)", font=dict(color="#06B6D4", size=11),
                 buttons=[
                     dict(label="🎥 Director 3D", method="relayout", args=[{"scene.camera.eye": dict(x=0.0, y=-1.85, z=1.15), "scene.camera.center": dict(x=0, y=0.1, z=-0.2)}]),
                     dict(label="📐 Top-Down 2D", method="relayout", args=[{"scene.camera.eye": dict(x=0.0, y=0.01, z=2.4), "scene.camera.center": dict(x=0, y=0.1, z=0)}]),
                     dict(label="👁️ Front Row POV", method="relayout", args=[{"scene.camera.eye": dict(x=0.0, y=-0.5, z=0.4), "scene.camera.center": dict(x=0, y=0.8, z=0.6)}]),
                 ]
             )],
-            margin=dict(l=0, r=0, t=35, b=0), height=500, paper_bgcolor="#05070B", showlegend=False
+            margin=dict(l=0, r=0, t=35, b=0), height=500, paper_bgcolor="#030712", showlegend=False
         )
         return fig
 
     st.plotly_chart(render_customer_3d(seats_df, st.session_state.selected_seats), use_container_width=True)
 
-    # Interactive Inspection HUD for Chosen Seats
+    # Dolby Atmos 7.1.4 Surround Channel Visualizer HUD
     if st.session_state.selected_seats:
         hud_df = seats_df[seats_df["seat_id"].isin(st.session_state.selected_seats)]
         st.markdown("<div style='margin-top:10px;'></div>", unsafe_allow_html=True)
-        hud_cols = st.columns(min(len(hud_df), 4))
-        for idx, (_, s_row) in enumerate(hud_df.head(4).iterrows()):
-            with hud_cols[idx]:
+        h_col1, h_col2 = st.columns([1.5, 2.5])
+
+        with h_col1:
+            st.markdown("#### 🎧 Spatial Telemetry Readout")
+            for _, s_row in hud_df.head(2).iterrows():
                 st.markdown(f"""
-                <div style="background:rgba(15,23,42,0.8); border:1px solid rgba(255,255,255,0.08); padding:10px 14px; border-radius:10px;">
-                    <div style="font-size:12px; font-weight:700; color:#D4AF37;">Seat {s_row['seat_id']} ({s_row['tier'].split('(')[0]})</div>
-                    <div style="font-size:11px; color:#94A3B8;">Neck Tilt: <b style="color:#FFF;">{s_row['tilt']:.1f}°</b></div>
-                    <div style="font-size:11px; color:#94A3B8;">Dolby Immersion: <b style="color:#00F59B;">{s_row['audio_immersion']:.0f}%</b> • {s_row['spl_db']} dB</div>
+                <div class="glass-card" style="padding:12px 14px; margin-bottom:8px; border:1px solid rgba(6, 182, 212, 0.3);">
+                    <div style="font-size:13px; font-weight:800; color:#FACC15;">Seat {s_row['seat_id']} ({s_row['tier'].split('(')[0]})</div>
+                    <div style="font-size:11px; color:#94A3B8;">Optical FOV: <b style="color:#06B6D4;">{s_row['fov_deg']}°</b> • Neck Tilt: <b style="color:#FFF;">{s_row['tilt']:.1f}°</b></div>
+                    <div style="font-size:11px; color:#94A3B8;">Dolby Immersion: <b style="color:#10B981;">{s_row['audio_immersion']:.0f}%</b> • {s_row['spl_db']} dB SPL</div>
                 </div>
                 """, unsafe_allow_html=True)
 
+        with h_col2:
+            st.markdown("#### 🔊 Dolby Atmos 7.1.4 Surround Channel Spectrum")
+            channels = ['Front Left', 'Center Dialogue', 'Front Right', 'Side Surround', 'Rear Surround', 'Overhead Top', 'LFE Subwoofer']
+            avg_imm = hud_df["audio_immersion"].mean()
+            # Dynamic speaker output simulation based on seat immersion
+            levels = [
+                avg_imm * 0.92, 94.0, avg_imm * 0.92,
+                avg_imm * 0.85, avg_imm * 0.78, avg_imm * 0.95, 96.0
+            ]
+            fig_audio = go.Figure(go.Bar(
+                x=channels, y=levels,
+                marker=dict(color=['#06B6D4', '#FACC15', '#06B6D4', '#10B981', '#10B981', '#F43F5E', '#A855F7'])
+            ))
+            fig_audio.update_layout(
+                height=180, margin=dict(l=5, r=5, t=10, b=10),
+                paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+                yaxis=dict(range=[0, 100], title="Signal SPL %"), font=dict(color="#94A3B8", size=9)
+            )
+            st.plotly_chart(fig_audio, use_container_width=True)
+
     st.markdown("---")
 
-    # Seat Selection + Canteen Snacks + Smart Parking
+    # Booking & Consolidated Checkout
     col_seat_cart, col_fnb_pay = st.columns([1.6, 1.6], gap="large")
 
     with col_seat_cart:
-        st.subheader("💺 1. Choose Your Seats")
-        user_picks = st.multiselect("Available Seats:", options=bookable_seats, default=st.session_state.selected_seats)
+        st.subheader("💺 1. Choose Seats (All 96 Unlocked)")
+        user_picks = st.multiselect("Select Any Seat:", options=all_seat_ids, default=st.session_state.selected_seats)
         st.session_state.selected_seats = user_picks
 
+        st.markdown(f"""
+        <div style="display:flex; justify-content:space-around; background:rgba(15,23,42,0.7); border:1px solid rgba(255,255,255,0.08); padding:10px; border-radius:10px; margin-top:14px; font-size:12px;">
+            <span style="color:#10B981;">🟢 <b>Prime Sweet Spot</b>: ₹{int(t_pricing['prime'] * effective_surge)}</span>
+            <span style="color:#06B6D4;">🔵 <b>Standard Eye-Level</b>: ₹{int(t_pricing['standard'] * effective_surge)}</span>
+            <span style="color:#F43F5E;">🔴 <b>Neck Relief Front</b>: ₹{int(t_pricing['front'] * effective_surge)}</span>
+        </div>
+        """, unsafe_allow_html=True)
+
         st.markdown("### 🚗 2. Multiplex Smart Parking Slot")
-        parking_opt = st.radio(
-            "Add Reserved Parking Slot?",
-            ["No Parking Needed", "Two-Wheeler Slot (₹30)", "Car Valet Parking (₹80)"],
-            horizontal=True
-        )
+        parking_opt = st.radio("Add Reserved Parking?", ["No Parking Needed", "Two-Wheeler Slot (₹30)", "Car Valet Parking (₹80)"], horizontal=True)
         parking_cost = 80 if "Car" in parking_opt else 30 if "Two" in parking_opt else 0
 
     with col_fnb_pay:
-        st.subheader("🍿 3. Multiplex Canteen & Snacks Cart")
+        st.subheader("🍿 3. Multiplex Canteen & Delivery Option")
+        fnb_delivery_mode = st.radio(
+            "Snack Fulfillment:",
+            ["🚀 Deliver Directly to Seat at Interval (+₹20)", "🏃 Express Counter Self-Pickup (Free)"],
+            horizontal=True
+        )
+        delivery_charge = 20 if "Deliver Directly" in fnb_delivery_mode else 0
+
         fnb_col1, fnb_col2 = st.columns(2)
         with fnb_col1:
             popcorn_qty = st.number_input("Caramel Popcorn Tub (₹190)", min_value=0, max_value=6, value=1)
@@ -463,7 +510,8 @@ if st.session_state.selected_portal == "🎟️ Audience Booking Portal":
             coffee_qty = st.number_input("Cold Coffee Blast (₹120)", min_value=0, max_value=6, value=1)
             samosa_qty = st.number_input("Crispy Samosa Trio (₹90)", min_value=0, max_value=6, value=0)
 
-        fnb_total = (popcorn_qty * 190) + (nachos_qty * 160) + (coffee_qty * 120) + (samosa_qty * 90)
+        fnb_subtotal = (popcorn_qty * 190) + (nachos_qty * 160) + (coffee_qty * 120) + (samosa_qty * 90)
+        fnb_total = fnb_subtotal + delivery_charge if fnb_subtotal > 0 else 0
 
         st.markdown("---")
         st.subheader("💳 4. Real-Time Consolidated Checkout")
@@ -478,14 +526,15 @@ if st.session_state.selected_portal == "🎟️ Audience Booking Portal":
             st.markdown(f"""
             <div class="gateway-box">
                 <div class="invoice-line"><span>Seat Tickets ({len(user_picks)}):</span><strong>₹{int(base_seat_amt):,}</strong></div>
-                <div class="invoice-line"><span>Canteen & F&B Items:</span><strong>₹{int(fnb_total):,}</strong></div>
+                <div class="invoice-line"><span>F&B Snacks Subtotal:</span><strong>₹{int(fnb_subtotal):,}</strong></div>
+                {f'<div class="invoice-line"><span>Interval In-Seat Delivery Fee:</span><strong>₹{delivery_charge}</strong></div>' if delivery_charge > 0 and fnb_subtotal > 0 else ''}
                 <div class="invoice-line"><span>Parking Slot:</span><strong>₹{int(parking_cost):,}</strong></div>
                 <div class="invoice-line"><span>Convenience & GST (18%):</span><strong>₹{gst + conv_fee:.2f}</strong></div>
                 <div class="invoice-total-line"><span>Grand Total:</span><span>₹{int(grand_total):,}</span></div>
             </div>
             """, unsafe_allow_html=True)
 
-            pay_rail = st.radio("Select Payment Method:", ["Google Pay", "PhonePe", "Paytm UPI", "Net Banking", "Cards"], horizontal=True)
+            pay_rail = st.radio("Payment Rail:", ["Google Pay", "PhonePe", "Paytm UPI", "Net Banking", "Cards"], horizontal=True)
 
             if st.button(f"⚡ Pay ₹{int(grand_total):,} via {pay_rail}", key="btn_pay_main"):
                 with st.spinner("Authorizing Secure Fintech Rails..."):
@@ -495,9 +544,10 @@ if st.session_state.selected_portal == "🎟️ Audience Booking Portal":
                         "theatre": sel_theatre_name, "audi": sel_audi, "genre": genre,
                         "slot": slot, "seats": ", ".join(user_picks), "total": int(grand_total),
                         "method": pay_rail, "txn_id": f"TXN-CBE-{int(time.time())}",
-                        "fnb_items": f"{popcorn_qty} Popcorn, {coffee_qty} Coffee" if fnb_total > 0 else "None",
+                        "fnb_items": f"{popcorn_qty} Popcorn, {coffee_qty} Coffee" if fnb_subtotal > 0 else "None",
+                        "delivery_tag": "IN-SEAT DELIVERY" if delivery_charge > 0 and fnb_subtotal > 0 else "COUNTER PICKUP",
                         "parking": parking_opt.split('(')[0].strip(),
-                        "food_token": f"FNB-{np.random.randint(100, 999)}" if fnb_total > 0 else "NO-FNB",
+                        "food_token": f"FNB-{np.random.randint(100, 999)}" if fnb_subtotal > 0 else "NO-FNB",
                         "lat": t_meta["lat"], "lon": t_meta["lon"]
                     }
                     st.balloons()
@@ -511,10 +561,10 @@ if st.session_state.selected_portal == "🎟️ Audience Booking Portal":
         with r_left:
             st.markdown(f"""
             <div class="boarding-pass-wrap">
-                <h3 style="color:#F5D77F; margin:0;">{rec['theatre']}</h3>
-                <p style="color:#94A3B8; font-size:13px; margin:4px 0 12px 0;">Confirmed Seats: <b style="color:#D4AF37;">{rec['seats']}</b> • Fare: <b style="color:#00F59B;">₹{rec['total']}</b> via {rec['method']}</p>
+                <h3 style="color:#FACC15; margin:0; font-family:'Cinzel', serif;">{rec['theatre']}</h3>
+                <p style="color:#94A3B8; font-size:13px; margin:4px 0 12px 0;">Confirmed Seats: <b style="color:#06B6D4;">{rec['seats']}</b> • Fare: <b style="color:#FACC15;">₹{rec['total']}</b> via {rec['method']}</p>
                 <div style="background:rgba(255,255,255,0.04); padding:10px; border-radius:8px; font-size:12px; margin-bottom:8px;">
-                    <div>🍿 <b>Canteen Food Token:</b> <span style="color:#00F59B; font-weight:700;">{rec['food_token']}</span> ({rec['fnb_items']})</div>
+                    <div>🍿 <b>F&B Status:</b> <span style="color:#10B981; font-weight:700;">{rec['food_token']}</span> • {rec['delivery_tag']}</div>
                     <div>🚗 <b>Parking Verification:</b> {rec['parking']}</div>
                 </div>
                 <div style="font-size:11px; color:#64748B;">Turnstile Reference ID: <code>{rec['txn_id']}</code></div>
@@ -522,17 +572,17 @@ if st.session_state.selected_portal == "🎟️ Audience Booking Portal":
             """, unsafe_allow_html=True)
         with r_right:
             qr = qrcode.QRCode(version=1, box_size=5, border=2)
-            qr_content = f"TICKET|TXN={rec['txn_id']}|SEATS={rec['seats']}|THEATRE={rec['theatre']}|FNB={rec['food_token']}|PARK={rec['parking']}"
+            qr_content = f"TICKET|TXN={rec['txn_id']}|SEATS={rec['seats']}|THEATRE={rec['theatre']}|FNB={rec['food_token']}|TAG={rec['delivery_tag']}|PARK={rec['parking']}"
             qr.add_data(qr_content)
             qr.make(fit=True)
             buf = io.BytesIO()
             qr.make_image().save(buf, format="PNG")
-            st.image(buf.getvalue(), caption="Multiplex Speed-Gate Turnstile Pass", width=170)
+            st.image(buf.getvalue(), caption="Scan at Entrance Turnstile", width=170)
 
 # =========================================================
 # PORTAL 2: THEATRE MANAGEMENT & EXECUTIVE ANALYTICS
 # =========================================================
-else:
+elif st.session_state.selected_portal == "🏢 Theatre Manager Admin (BI)":
     st.subheader("🏢 Theatre Executive Management & Revenue Analytics")
     st.caption("Access restricted to Multiplex Operations, General Managers & Revenue Analysts.")
 
@@ -540,8 +590,8 @@ else:
         auth_c1, auth_c2, auth_c3 = st.columns([1, 1.6, 1])
         with auth_c2:
             st.markdown("""
-            <div style="background:rgba(15,23,42,0.9); border:1px solid rgba(212,175,55,0.4); border-radius:14px; padding:24px; margin-top:20px;">
-                <h3 style="color:#F5D77F; margin-top:0; font-family:'Cinzel', serif;">Manager Login Gateway</h3>
+            <div class="glass-card" style="border:1px solid rgba(6,182,212,0.45); padding:24px; margin-top:20px;">
+                <h3 style="color:#06B6D4; margin-top:0; font-family:'Cinzel', serif;">Manager Login Gateway</h3>
                 <p style="color:#94A3B8; font-size:13px;">Enter the multiplex admin security passcode to unlock live yield controls and forecasting algorithms.</p>
             </div>
             """, unsafe_allow_html=True)
@@ -558,8 +608,7 @@ else:
         st.sidebar.markdown("### ⚙️ Executive Yield Controls")
         new_multiplier = st.sidebar.slider(
             "Live Dynamic Pricing Multiplier:",
-            0.85, 1.45, float(st.session_state.admin_dynamic_surge), 0.05,
-            help="Alters active ticket rates across customer portals in real-time."
+            0.85, 1.45, float(st.session_state.admin_dynamic_surge), 0.05
         )
         st.session_state.admin_dynamic_surge = new_multiplier
 
@@ -567,58 +616,68 @@ else:
             st.session_state.admin_logged_in = False
             st.rerun()
 
-        # Advanced Multiplex KPIs (Including SPH - Spend Per Head)
-        sold_cnt = len(seats_df[seats_df["status"] == "Sold Out"])
-        occ_ratio = (sold_cnt / len(seats_df)) * 100
-        gross_ticket_yield = seats_df[seats_df["status"] == "Sold Out"]["fare"].sum()
-        estimated_fnb_rev = sold_cnt * 140  # Industry average ₹140 per head
-        sph_metric = (gross_ticket_yield + estimated_fnb_rev) / max(1, sold_cnt)
+        total_seats = len(seats_df)
+        gross_potential = seats_df["fare"].sum()
+        estimated_fnb_rev = int(total_seats * 0.75 * 140)
+        sph_metric = (gross_potential * 0.75 + estimated_fnb_rev) / max(1, int(total_seats * 0.75))
 
         k1, k2, k3, k4 = st.columns(4)
         with k1:
-            st.markdown(f"""<div class="kpi-card"><div class="kpi-value">{occ_ratio:.1f}%</div><div class="kpi-label">Auditorium Occupancy</div></div>""", unsafe_allow_html=True)
+            st.markdown(f"""<div class="kpi-card"><div class="kpi-value">76.4%</div><div class="kpi-label">Auditorium Projected Occupancy</div></div>""", unsafe_allow_html=True)
         with k2:
-            st.markdown(f"""<div class="kpi-card"><div class="kpi-value">₹{int(gross_ticket_yield):,}</div><div class="kpi-label">Realized Box Office</div></div>""", unsafe_allow_html=True)
+            st.markdown(f"""<div class="kpi-card"><div class="kpi-value">₹{int(gross_potential * 0.76):,}</div><div class="kpi-label">Expected Box Office Yield</div></div>""", unsafe_allow_html=True)
         with k3:
-            st.markdown(f"""<div class="kpi-card"><div class="kpi-value">₹{int(estimated_fnb_rev):,}</div><div class="kpi-label">F&B Canteen Concession Yield</div></div>""", unsafe_allow_html=True)
+            st.markdown(f"""<div class="kpi-card"><div class="kpi-value">₹{int(estimated_fnb_rev):,}</div><div class="kpi-label">F&B Concession Run Rate</div></div>""", unsafe_allow_html=True)
         with k4:
             st.markdown(f"""<div class="kpi-card"><div class="kpi-value">₹{int(sph_metric):,}</div><div class="kpi-label">SPH (Spend Per Head Metric)</div></div>""", unsafe_allow_html=True)
 
         st.markdown("<div style='margin-top:25px;'></div>", unsafe_allow_html=True)
 
         an_col1, an_col2 = st.columns(2)
-
         with an_col1:
             st.markdown("#### 🗺️ Spatial Seating Occupancy Density (Heatmap)")
-            st.caption("Identifies high-traffic acoustic sweet spots vs underperforming front rows.")
             heat_pivot = seats_df.pivot(index="row", columns="col", values="historical_fill_rate")
             fig_h = px.imshow(
-                heat_pivot,
-                labels=dict(x="Column", y="Row", color="Fill %"),
-                x=[str(i) for i in range(1, 13)],
-                y=['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'],
+                heat_pivot, labels=dict(x="Column", y="Row", color="Fill %"),
+                x=[str(i) for i in range(1, 13)], y=['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'],
                 color_continuous_scale="Viridis"
             )
-            fig_h.update_layout(
-                height=350, margin=dict(l=10, r=10, t=10, b=10),
-                paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font=dict(color="#E2E8F0")
-            )
+            fig_h.update_layout(height=350, margin=dict(l=10, r=10, t=10, b=10), paper_bgcolor="rgba(0,0,0,0)", font=dict(color="#E2E8F0"))
             st.plotly_chart(fig_h, use_container_width=True)
 
         with an_col2:
-            st.markdown("#### 🍿 Revenue Contribution Share (Tickets vs F&B Concessions)")
-            st.caption("Commercial multiplex profitability breakdown.")
+            st.markdown("#### 🍿 Revenue Contribution Share (Tickets vs Concessions)")
             rev_share_fig = go.Figure(data=[go.Pie(
                 labels=['Box Office Tickets', 'F&B Popcorn/Snacks', 'Convenience Fee', 'Parking Slots'],
-                values=[gross_ticket_yield, estimated_fnb_rev, sold_cnt * 22, sold_cnt * 35],
+                values=[gross_potential * 0.76, estimated_fnb_rev, 72 * 22, 72 * 35],
                 hole=.45,
-                marker=dict(colors=['#00F59B', '#D4AF37', '#00E5FF', '#FFB800'])
+                marker=dict(colors=['#10B981', '#FACC15', '#06B6D4', '#F43F5E'])
             )])
-            rev_share_fig.update_layout(
-                height=350, margin=dict(l=10, r=10, t=10, b=10),
-                paper_bgcolor="rgba(0,0,0,0)", font=dict(color="#E2E8F0")
-            )
+            rev_share_fig.update_layout(height=350, margin=dict(l=10, r=10, t=10, b=10), paper_bgcolor="rgba(0,0,0,0)", font=dict(color="#E2E8F0"))
             st.plotly_chart(rev_share_fig, use_container_width=True)
+
+        st.markdown("---")
+
+        # Dynamic Dead-Zone Auto-Repricer
+        st.markdown("#### ⚡ Dead-Zone Auto-Repricer Simulation (Before vs After Optimization)")
+        rep_col1, rep_col2 = st.columns([1.5, 2.5])
+        with rep_col1:
+            discount_sim = st.slider("Simulated Front-Row Discount (%):", 10, 50, 25, 5)
+            original_front_rev = len(seats_df[seats_df["row"].isin(['A', 'B'])]) * 0.25 * t_pricing["front"]
+            simulated_occupancy_boost = min(0.90, 0.25 + (discount_sim * 0.013))
+            optimized_front_rev = len(seats_df[seats_df["row"].isin(['A', 'B'])]) * simulated_occupancy_boost * (t_pricing["front"] * (1 - discount_sim/100))
+
+        with rep_col2:
+            comp_fig = go.Figure(data=[
+                go.Bar(name='Standard Flat Price', x=['Front Row Revenue (₹)'], y=[original_front_rev], marker_color='#F43F5E'),
+                go.Bar(name='Algorithm Repriced', x=['Front Row Revenue (₹)'], y=[optimized_front_rev], marker_color='#10B981')
+            ])
+            comp_fig.update_layout(
+                barmode='group', height=280, margin=dict(l=10, r=10, t=10, b=10),
+                paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+                font=dict(color="#E2E8F0"), yaxis_title="Revenue (₹)"
+            )
+            st.plotly_chart(comp_fig, use_container_width=True)
 
         st.markdown("---")
 
@@ -632,11 +691,61 @@ else:
         proj_lbls = [f"Day +{i+1}" for i in range(3)]
 
         fig_p = go.Figure()
-        fig_p.add_trace(go.Scatter(x=list(dates_arr), y=hist_rev, mode="lines+markers", name="Observed Box Office (₹)", line=dict(color="#00F59B", width=3)))
-        fig_p.add_trace(go.Scatter(x=proj_lbls, y=future_proj, mode="lines+markers", name="ML Forecast (₹)", line=dict(color="#FFB800", width=3, dash="dash")))
+        fig_p.add_trace(go.Scatter(x=list(dates_arr), y=hist_rev, mode="lines+markers", name="Observed Box Office (₹)", line=dict(color="#06B6D4", width=3)))
+        fig_p.add_trace(go.Scatter(x=proj_lbls, y=future_proj, mode="lines+markers", name="ML Forecast (₹)", line=dict(color="#FACC15", width=3, dash="dash")))
         fig_p.update_layout(
             height=320, margin=dict(l=10, r=10, t=10, b=10),
             paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
             yaxis_title="Revenue (₹)", font=dict(color="#E2E8F0"), legend=dict(orientation="h", y=1.1)
         )
         st.plotly_chart(fig_p, use_container_width=True)
+
+# =========================================================
+# PORTAL 3: TURNSTILE SECURITY SCANNER (GATE STAFF VIEW)
+# =========================================================
+else:
+    st.subheader("🛡️ Multiplex Speed-Gate Turnstile Staff Portal")
+    st.caption("Live Gate Scanner terminal for entry verification and Canteen token validation.")
+
+    scan_col1, scan_col2 = st.columns([1.5, 2.0], gap="large")
+
+    with scan_col1:
+        st.markdown("""
+        <div class="glass-card" style="border:1px solid rgba(6,182,212,0.4);">
+            <h4 style="color:#06B6D4; margin:0 0 8px 0;">Optical QR Ingestion</h4>
+            <p style="color:#94A3B8; font-size:12px;">Paste or scan customer turnstile QR payload string below:</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+        demo_payload = f"TICKET|TXN=TXN-CBE-1738491|SEATS=E5, E6|THEATRE=Broadway Cinemas|FNB=FNB-482|TAG=IN-SEAT DELIVERY|PARK=Car Valet"
+        scanned_input = st.text_area("Turnstile Scanner Payload:", value=demo_payload, height=120)
+
+        verify_btn = st.button("🚀 Verify Pass & Unlock Speed-Turnstile")
+
+    with scan_col2:
+        if verify_btn and scanned_input:
+            if "TICKET|TXN=" in scanned_input:
+                tokens = dict(item.split("=") for item in scanned_input.split("|") if "=" in item)
+
+                st.markdown(f"""
+                <div style="background:rgba(16,185,129,0.12); border:2px solid #10B981; border-radius:14px; padding:20px; box-shadow:0 0 30px rgba(16,185,129,0.25);">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <h2 style="color:#10B981; margin:0; font-family:'Space Grotesk', sans-serif;">✅ ACCESS GRANTED</h2>
+                        <span style="background:#10B981; color:#030712; padding:4px 10px; border-radius:6px; font-weight:800; font-size:12px;">TURNSTILE UNLOCKED</span>
+                    </div>
+                    <div style="margin-top:14px; font-size:14px; line-height:1.7;">
+                        <div>Auditorium Gate: <b style="color:#FFF;">Gate 3 (Prime Sweet-Spot Access)</b></div>
+                        <div>Validated Seats: <b style="color:#FACC15; font-size:18px;">{tokens.get('SEATS', 'N/A')}</b></div>
+                        <div>Canteen Token: <b style="color:#06B6D4;">{tokens.get('FNB', 'NO-FNB')}</b> ({tokens.get('TAG', 'COUNTER')})</div>
+                        <div>Parking Status: <b style="color:#FFF;">{tokens.get('PARK', 'None')}</b></div>
+                        <div style="font-size:11px; color:#64748B; margin-top:8px;">Transaction Reference: <code>{tokens.get('TXN', 'VERIFIED')}</code></div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+            else:
+                st.markdown("""
+                <div style="background:rgba(244,63,94,0.15); border:2px solid #F43F5E; border-radius:14px; padding:20px;">
+                    <h3 style="color:#F43F5E; margin:0;">❌ ACCESS DENIED: INVALID QR PAYLOAD</h3>
+                    <p style="color:#94A3B8; font-size:12px; margin-top:6px;">This QR barcode is forged, expired, or belongs to another showtime.</p>
+                </div>
+                """, unsafe_allow_html=True)
